@@ -2,10 +2,10 @@
 //   bundle  the 20 biggest holders of a coin and who funded each: wallets secretly run by one hand light up as clusters
 //   file    the case file a stranger can build on any wallet in a second: names, funders, circle, holdings, sleep, a stamp
 //   vanity  a burner whose address starts (or ends) with your letters, ground out in this tab and never sent anywhere
-import { $, esc, api, short, ago, isAddr, line, block, spinner, dots, toast, b58, usd, sleep } from './core.js?v=7';
-import { def, showTab, run } from './cmds.js?v=7';
-import * as SG from './signer.js?v=7';
-import { decode } from './fx.js?v=7';
+import { $, esc, api, short, ago, isAddr, line, block, spinner, dots, toast, b58, usd, sleep } from './core.js?v=8';
+import { def, showTab, run } from './cmds.js?v=8';
+import * as SG from './signer.js?v=8';
+import { decode } from './fx.js?v=8';
 
 const RM = matchMedia('(prefers-reduced-motion: reduce)');
 const CL = ['#d9a066', '#ea9f9f', '#e7c58c', '#9fc1d6', '#c3a9da', '#a7d7b6', '#d6b49f', '#b9c79a'];
