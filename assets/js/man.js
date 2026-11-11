@@ -1,6 +1,6 @@
 // st3alth · the manual: window 6. What st3alth does, what it hides and what stays public, the keys, every command, faq.
-import { $, esc } from './core.js?v=1';
-import { CMDS } from './cmds.js?v=1';
+import { $, esc } from './core.js?v=2';
+import { CMDS } from './cmds.js?v=2';
 
 const CARDS = [
   ['trace', 'who can see you', 'paste any wallet. st3alth follows its first SOL back through up to three funders, labels every exchange and protocol on the way, maps who it talks to, and scores how close it is to a name.', 'trace'],
@@ -11,6 +11,7 @@ const CARDS = [
   ['scan', 'every coin as it is born', 'pump.fun births, the final stretch and graduations, live, with the numbers trenchers check first: top holders, dev history, bots, bundles.', 'scan'],
   ['checkup', 'one page, every leak', 'exposure, threats, approvals, your browser fingerprint, this tab and your signer, audited together, graded, with the fixes in order.', 'checkup'],
   ['link', 'are these two wallets linked?', 'direct transfers, a shared funder, private wallets in common, the same hours. see what ties two wallets together before someone else does.', 'link'],
+  ['follow', 'a live tail on any wallet', 'follow a wallet and every transfer in or out prints in your console as it lands, labelled: exchanges, protocols, known wallets. up to three at once.', 'follow'],
   ['threats', 'who is working against you', 'every trace looks for address poisoning (a look-alike of a wallet you pay, planted in your history with a tiny transfer) and for dust from strangers.', 'trace'],
   ['approvals', 'who can move your tokens', 'token approvals are standing permissions that drainers wait on. see every one on a wallet, and revoke them all with a single signature.', 'approvals'],
   ['fingerprint', 'what your browser gives away', 'the twelve signals any site can read without asking, hashed the way trackers do. it is worked out in your tab and sent nowhere.', 'fingerprint'],

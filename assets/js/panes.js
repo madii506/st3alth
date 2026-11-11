@@ -1,7 +1,7 @@
 // st3alth · the live side: new coins, trending, stocks, the wallet pane, the top bar and the status line.
-import { $, $$, api, esc, short, ago, usd, price, pct, amt, img, seen, pic, imgSet } from './core.js?v=1';
-import * as SG from './signer.js?v=1';
-import { watchlist } from './cmds.js?v=1';
+import { $, $$, api, esc, short, ago, usd, price, pct, amt, img, seen, pic, imgSet } from './core.js?v=2';
+import * as SG from './signer.js?v=2';
+import { watchlist } from './cmds.js?v=2';
 let RUN = () => {}; export const setPaneRunner = f => { RUN = f; };
 const vis = () => !document.hidden;
 const prev = new Map();
@@ -65,12 +65,13 @@ export function startPanes() {
   $$('#side .pl').forEach(pl => { pl.innerHTML = Array.from({ length: 6 }, (_, i) => `<div class="sk" style="width:${60 + (i * 37) % 35}%"></div>`).join(''); });
   side.addEventListener('click', e => { const r = e.target.closest('[data-run]'); if (r) return RUN(r.dataset.run); const m = e.target.closest('[data-m]'); if (m) RUN('token ' + m.dataset.m); });
   $$('#p-trend .tfs button').forEach(b => b.onclick = () => { TW = b.dataset.w; $$('#p-trend .tfs button').forEach(x => x.classList.toggle('on', x === b)); trendPane(); });
-  const wide = () => innerWidth > 980 || document.body.dataset.win === 'watch';
+  const wide = () => document.body.dataset.win === 'watch';   // the live columns live in the watch view now: read them only while it is open
   const loop = (f, ms, onlyWide = true) => { const go = () => { if (vis() && (!onlyWide || wide())) f(); }; go(); setInterval(go, ms); };
-  loop(newPane, 4500); loop(trendPane, 30000); loop(stockPane, 45000); loop(walletPane, 15000); loop(topBar, 12000, false); loop(tape, 60000, false); loop(heliusLine, 30000, false);
+  loop(newPane, 4500); loop(trendPane, 30000); loop(stockPane, 45000); loop(walletPane, 15000); loop(topBar, 12000, false); loop(heliusLine, 30000, false);
+  addEventListener('st3:win', e => { if (e.detail === 'watch') { newPane(); trendPane(); stockPane(); walletPane(); } });
   // the slot ticks forward between pings, about 2.5 a second
   setInterval(() => { if (SLOT) { const el = document.getElementById('hv-slot'); if (el) el.textContent = Math.floor(SLOT.s + (Date.now() - SLOT.t) / 400).toLocaleString('en-US'); } }, 400);
-  $('#tape').addEventListener('click', e => { const m = e.target.closest('[data-m]'); if (m) RUN('token ' + m.dataset.m); });
+
   window.addEventListener('st3:balances', () => { walletPane(); });
   window.addEventListener('st3:watch', () => walletPane());
   SG.onSigner(s => {

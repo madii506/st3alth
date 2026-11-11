@@ -1,9 +1,9 @@
 // st3alth · every command. Each one is real: quotes, transactions and data come from the chain (through Helius), Jupiter
 // and pump.fun; the wallet (or a burner born in this tab) signs. Nothing here is a demo.
-import { $, $$, api, esc, short, ago, usd, price, pct, amt, img, line, block, spinner, dots, sleep, clear, copy, toast, isAddr, unb64, b64, history, forgetHist, seen, SEEN, pic, CA, EXPO } from './core.js?v=1';
-import * as SG from './signer.js?v=1';
-import { drawChart, spark } from './chart.js?v=1';
-import { startPulse, stopPulse, setPulseRunner } from './pulse.js?v=1';
+import { $, $$, api, esc, short, ago, usd, price, pct, amt, img, line, block, spinner, dots, sleep, clear, copy, toast, isAddr, unb64, b64, history, forgetHist, seen, SEEN, pic, CA, EXPO } from './core.js?v=2';
+import * as SG from './signer.js?v=2';
+import { drawChart, spark } from './chart.js?v=2';
+import { startPulse, stopPulse, setPulseRunner } from './pulse.js?v=2';
 
 export const CMDS = {}, ALIAS = {};
 export const def = (name, cat, usage, help, run, alias = []) => { CMDS[name] = { name, cat, usage, help, run }; alias.forEach(a => { ALIAS[a] = name; }); };
@@ -402,28 +402,35 @@ def('gm', 'system', 'gm', 'gm', () => line('gm. nobody saw that.'));
 def('sudo', 'system', 'sudo', '', () => line('<span class="r">nice try.</span> <span class="d">there is no root here. there is no you here.</span>'));
 def('exit', 'system', 'exit', '', () => line('<span class="d">there is no exit. close the tab and you were never here.</span>'));
 
-// ---------------------------------------------------------------- tabs inside the console
-// windows, like tmux: one shows at a time, the others keep their state. alt+0..7 or the bar at the bottom.
-const WINS = { out: 'w-shell', pulse: 'w-scan', trace: 'w-trace', chart: 'w-chart', radar: 'w-radar', orders: 'w-orders', man: 'w-man', check: 'w-check' };
+// ---------------------------------------------------------------- views: the stage shows one at a time, the console is always docked below
+// (on a phone the two take turns). alt+0..8, the rail, the palette, or the command that needs the view.
+const WINS = { pulse: 'w-scan', trace: 'w-trace', chart: 'w-chart', radar: 'w-radar', orders: 'w-orders', man: 'w-man', check: 'w-check', watch: 'w-watch' };
+const LABEL = { out: 'console', pulse: 'scan', trace: 'trace', chart: 'chart', radar: 'radar', orders: 'orders', man: 'manual', check: 'checkup', watch: 'watch' };
+const small = () => innerWidth <= 980;
+function paintRail() {
+  const B = document.body, on = small() && B.dataset.focus === 'console' ? 'out' : B.dataset.win;
+  $$('#rail [data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === on));
+  const c = $('#crumb'); if (c) c.textContent = LABEL[on] || on || '';
+}
 export function showTab(k) {
   if (k === 'console' || k === 'shell') k = 'out'; if (k === 'scan' || k === 'scanner') k = 'pulse';
-  const prev = document.body.dataset.win || 'out'; document.body.dataset.win = k;
-  $$('#tmux [data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === k));
+  if (k === 'out') { document.body.dataset.focus = 'console'; paintRail(); const o = $('#out'); if (o) o.scrollTop = o.scrollHeight; window.dispatchEvent(new CustomEvent('st3:win', { detail: 'out' })); return; }
+  if (!WINS[k]) return;
+  document.body.dataset.focus = 'stage';
+  const prev = document.body.dataset.win || ''; document.body.dataset.win = k;
   for (const [key, id] of Object.entries(WINS)) {
     const el = document.getElementById(id); if (!el) continue;
     if (key === k) { if (el.hidden || prev !== k) { el.hidden = false; el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter'); } }
     else el.hidden = true;
   }
+  paintRail();
   if (k === 'pulse') startPulse(); else stopPulse();
   if (k === 'chart' && CH) { requestAnimationFrame(() => drawChart($('#chart'), CH.candles)); tapeTick(); } else { clearTimeout(TAPE.timer); TAPE.gen++; }
   if (k === 'chart' && !CH) { $('#ch-h').innerHTML = '<span class="d">no chart open. type</span> <span class="c">chart sol</span>'; $('#ch-tf').innerHTML = ''; }
   if (k === 'orders') loadOrders();
   window.dispatchEvent(new CustomEvent('st3:win', { detail: k }));
-  if (k === 'out') { const o = $('#out'); if (o) o.scrollTop = o.scrollHeight; }
 }
-const KNOWN = { So11111111111111111111111111111111111111112: 'SOL', EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v: 'USDC', Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB: 'USDT', JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN: 'JUP', DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263: 'BONK', EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm: 'WIF' };
-const symOf = m => { if (KNOWN[m]) return KNOWN[m]; for (const [k, v] of SEEN) if (v === m) return k.toUpperCase(); return short(m); };
-const every = sec => { sec = +sec || 0; return sec >= 604800 && !(sec % 604800) ? `${sec / 604800}w` : sec >= 86400 && !(sec % 86400) ? `${sec / 86400}d` : sec >= 3600 ? `${Math.round(sec / 3600)}h` : `${Math.round(sec / 60)}m`; };
+addEventListener('resize', () => paintRail());
 async function loadOrders() {
   const box = $('#ordbox'); const s = SG.state();
   const head = sub => `<div class="ord-h"><div><div class="eyebrow">orders</div><h2>your open orders</h2><p class="d">${sub}</p></div><div class="row"><button type="button" class="btn ghost sm" data-run="limit">+ limit</button><button type="button" class="btn ghost sm" data-run="dca">+ dca</button></div></div>`;

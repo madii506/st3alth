@@ -3,9 +3,9 @@
 //   strip        what a photo gives away (gps, camera, serials, time, software) and a verified clean copy
 //   approvals    token accounts that let someone else move your tokens, revoked in one signature
 // fingerprint and strip never call the network: every byte is read and written in this tab.
-import { $, esc, line, block, spinner, dots, toast, api, short, SEEN, isAddr } from './core.js?v=1';
-import { def, showTab, signAndSend } from './cmds.js?v=1';
-import * as SG from './signer.js?v=1';
+import { $, esc, line, block, spinner, dots, toast, api, short, SEEN, isAddr } from './core.js?v=2';
+import { def, showTab, signAndSend } from './cmds.js?v=2';
+import * as SG from './signer.js?v=2';
 
 const hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
 const sha = async s => hex(await crypto.subtle.digest('SHA-256', typeof s === 'string' ? new TextEncoder().encode(s) : s));

@@ -1,6 +1,6 @@
 // st3alth · the scanner: every pump.fun coin as it is born, as it climbs the curve, and as it graduates. Refreshes every
 // few seconds while you watch; new coins slide in at the top, numbers that move flash.
-import { $, esc, api, usd, pct, ago, amt, img, pic, imgSet } from './core.js?v=1';
+import { $, esc, api, usd, pct, ago, amt, img, pic, imgSet } from './core.js?v=2';
 let RUN = () => {}; export const setPulseRunner = f => { RUN = f; };
 let timer = 0, on = false, first = true, LAST = null;
 const ls = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };

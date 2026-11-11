@@ -1,9 +1,9 @@
 // st3alth · window 7, the checkup: one page that audits a wallet and this browser together, with the fixes in order.
 // and `link`: are two wallets tied together on chain? Both read only public data (through helius) and this tab.
-import { $, esc, line, block, spinner, dots, api, short, isAddr } from './core.js?v=1';
-import { def, showTab } from './cmds.js?v=1';
-import * as SG from './signer.js?v=1';
-import { readPrint } from './tools.js?v=1';
+import { $, esc, line, block, spinner, dots, api, short, isAddr, toast } from './core.js?v=2';
+import { def, showTab } from './cmds.js?v=2';
+import * as SG from './signer.js?v=2';
+import { readPrint } from './tools.js?v=2';
 
 const ringSvg = (v, col, size = 84, w = 7) => { const r = (size - w) / 2, c = 2 * Math.PI * r; return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}"><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="#17171a" stroke-width="${w}"/><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${c * v / 100} ${c}" transform="rotate(-90 ${size / 2} ${size / 2})" class="ck-arc"/></svg>`; };
 const GCOL = { A: '#a7d7b6', B: '#c9dca5', C: '#e7c58c', D: '#e9ad8a', F: '#ea9f9f' };
@@ -108,3 +108,36 @@ def('checkup', 'privacy', 'checkup [address]', 'one page that audits a wallet an
 }, ['audit', 'check']);
 addEventListener('st3:win', e => { if (e.detail === 'check' && !$('#ck-grid')) checkup(null); });
 SG.onSigner(() => { if (document.body.dataset.win === 'check') checkup(null); });
+
+// ---------------------------------------------------------------- follow: a live tail on any wallet
+const FOL = new Map();
+const amtS = n => n === 0 ? '0' : n < .001 ? n.toExponential(1) : String(+n.toFixed(4));
+function moveLine(addr, m) {
+  const dir = m.dir === 'in' ? '<span class="up">↓ in </span>' : '<span class="dn">↑ out</span>';
+  const who = m.label ? `<b>${esc(m.label)}</b>` : m.cp ? `<span class="tok" data-run="trace ${esc(m.cp)}">${esc(short(m.cp))}</span>` : '<span class="f">?</span>';
+  return `<span class="fol-dot"></span><span class="f">${new Date(m.t * 1000).toLocaleTimeString('en-GB')}</span> <span class="c">${esc(short(addr))}</span> ${dir} <b>${amtS(m.amount)} ${esc(m.sym || 'tokens')}</b> <span class="f">${m.dir === 'in' ? 'from' : 'to'}</span> ${who} <a href="https://solscan.io/tx/${esc(m.sig)}" target="_blank" rel="noopener noreferrer">tx ↗</a>`;
+}
+function paintFol() { const el = document.getElementById('st-fol'); if (el) { el.hidden = !FOL.size; el.innerHTML = FOL.size ? `<i class="live"></i>following ${FOL.size}` : ''; } }
+function stopFollow(addr, why) { const F = FOL.get(addr); if (!F) return line(`<span class="m">not following</span> <span class="c">${esc(short(addr))}</span>`); clearInterval(F.timer); FOL.delete(addr); line(`<span class="f">· no longer following ${esc(short(addr))}${why ? ' · ' + esc(why) : ''}</span>`); paintFol(); }
+async function pollFollow(addr) {
+  const F = FOL.get(addr); if (!F) return;
+  if (Date.now() - F.since > 30 * 60e3) return stopFollow(addr, 'stopped after 30 minutes. follow it again to keep going');
+  try {
+    const r = await api('moves', { params: { addr } }); const fresh = r.moves.filter(m => !F.seen.has(m.sig)).reverse();
+    for (const m of fresh) { F.seen.add(m.sig); line(moveLine(addr, m), 'fol'); }
+    if (fresh.length) { toast(`${short(addr)} moved · ${fresh.length} new`); try { window.__st3Sound && window.__st3Sound.tick(1500, .03); } catch { } }
+    F.err = 0;
+  } catch (e) { F.err = (F.err || 0) + 1; if (F.err === 1) line(`<span class="w">!</span> <span class="m">follow ${esc(short(addr))}: ${esc(e.message)}</span>`); if (F.err >= 3) stopFollow(addr, 'stopped after three failed reads'); }
+}
+def('follow', 'privacy', 'follow <wallet>', 'a live tail on any wallet: every transfer in or out prints in the console as it lands, labelled. up to three at once', async a => {
+  const addr = a[0]; if (!addr || !isAddr(addr)) throw new Error('Try: follow <wallet address>');
+  if (FOL.has(addr)) return line(`<span class="m">already following</span> <span class="c">${esc(short(addr))}</span>`);
+  if (FOL.size >= 3) throw new Error('Following three already. unfollow one first.');
+  const sp = spinner(`reading the newest moves of ${esc(short(addr))}`); let r;
+  try { r = await api('moves', { params: { addr } }); } catch (e) { sp.fail(esc(e.message)); return; }
+  sp.done(`<span class="o">✓</span> ${dots('follow', `<span class="c">${esc(short(addr))}</span> <span class="f">· live every 15 s · unfollow to stop</span>`)}`);
+  const F = { seen: new Set(r.moves.map(m => m.sig)), since: Date.now(), timer: 0, err: 0 }; FOL.set(addr, F);
+  r.moves.slice(0, 5).reverse().forEach(m => line(moveLine(addr, m), 'fol old'));
+  F.timer = setInterval(() => { if (!document.hidden) pollFollow(addr); }, 15000); paintFol();
+}, ['tail']);
+def('unfollow', 'privacy', 'unfollow [wallet]', 'stop following a wallet, or all of them', async a => { if (!FOL.size) return line('<span class="m">not following anything.</span>'); if (a[0]) return stopFollow(a[0]); for (const k of [...FOL.keys()]) stopFollow(k); });

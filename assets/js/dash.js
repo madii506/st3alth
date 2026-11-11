@@ -1,9 +1,9 @@
 // st3alth · radar: window 4. Twelve live tiles fed by the same sources the terminal uses (the chain through helius,
 // jupiter, pump.fun through jupiter's feed). Every number is real; when a feed is busy the tile says so.
-import { $, esc, api, usd, price, pct, ago, pic, short, sleep, block } from './core.js?v=1';
-import { spark } from './chart.js?v=1';
-import * as SG from './signer.js?v=1';
-import { def } from './cmds.js?v=1';
+import { $, esc, api, usd, price, pct, ago, pic, short, sleep, block } from './core.js?v=2';
+import { spark } from './chart.js?v=2';
+import * as SG from './signer.js?v=2';
+import { def } from './cmds.js?v=2';
 
 const SOL = 'So11111111111111111111111111111111111111112';
 const MAJORS = [['SOL', SOL], ['BTC', 'cbbtcf3aa214zXHbiAZQwf4122FBYbraNdFqgw4iMij'], ['ETH', '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs'], ['JUP', 'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN'],

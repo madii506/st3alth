@@ -1,15 +1,15 @@
 // st3alth · the terminal: the intro hand-off, the boot, the prompt (history, ghost completion, token search), windows
 // (alt+0..7), the palette (ctrl k), masked mode, sound. One prompt drives every window.
-import { $, $$, esc, sleep, line, initOut, api, pushHist, history, clear, toast, SEEN, dots, follow, imgErr, psHtml, copy, CA } from './core.js?v=1';
-import { CMDS, ALIAS, setRunner, showTab, chartHover, chartRedraw } from './cmds.js?v=1';
-import { startPanes, setPaneRunner, engineLine } from './panes.js?v=1';
-import * as SG from './signer.js?v=1';
-import { counted, setExtraRunner, aliasOf, stopTop, cwd } from './extra.js?v=1';
-import { radar } from './dash.js?v=1';
-import { runTrace, setMasked } from './privacy.js?v=1';
+import { $, $$, esc, sleep, line, initOut, api, pushHist, history, clear, toast, SEEN, dots, follow, imgErr, psHtml, copy, CA } from './core.js?v=2';
+import { CMDS, ALIAS, setRunner, showTab, chartHover, chartRedraw } from './cmds.js?v=2';
+import { startPanes, setPaneRunner, engineLine } from './panes.js?v=2';
+import * as SG from './signer.js?v=2';
+import { counted, setExtraRunner, aliasOf, stopTop, cwd } from './extra.js?v=2';
+import { radar } from './dash.js?v=2';
+import { runTrace, setMasked } from './privacy.js?v=2';
 import './tools.js';
 import './check.js';
-import { manual } from './man.js?v=1';
+import { manual } from './man.js?v=2';
 
 const dirOf = () => { const d = cwd(); return d === '/home/anon' ? '~' : d.replace('/home/anon', '~'); };
 const P = () => `<span class="p">${psHtml(dirOf())}</span>`;
@@ -101,11 +101,12 @@ inp.addEventListener('keydown', e => {
   else if (e.key === 'l' && e.ctrlKey) { e.preventDefault(); clear(); }
 });
 // keys: ctrl k palette, alt+digit windows, / to the prompt, esc closes the palette
-const TABS = ['out', 'pulse', 'trace', 'chart', 'radar', 'orders', 'man', 'check', 'watch'];
+const TABS = ['out', 'radar', 'pulse', 'trace', 'chart', 'orders', 'check', 'watch', 'man'];
 addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openPal(); }
   else if (e.key === 'Escape' && !$('#pal').hidden) closePal();
   else if (e.altKey && /^Digit[0-8]$/.test(e.code)) { e.preventDefault(); openWin(TABS[+e.code.slice(5)]); }
+  else if (e.altKey && e.code === 'Backquote') { e.preventDefault(); conMax(); }
   else if (e.key === '/' && (document.activeElement === document.body || !document.activeElement)) { e.preventDefault(); inp.focus({ preventScroll: true }); }
 });
 document.addEventListener('click', e => {
@@ -114,24 +115,35 @@ document.addEventListener('click', e => {
   const r = e.target.closest('[data-run]'); if (r && !r.closest('#side')) { e.preventDefault(); runFrom(r.dataset.run); return; }
   const f = e.target.closest('[data-fill]'); if (f) { e.preventDefault(); showTab('out'); inp.value = f.dataset.fill; paintGhost(); inp.focus(); }
 });
-$('#w-shell').addEventListener('click', e => { if (e.target.closest('.out') && !getSelection().toString() && !e.target.closest('a,button,input,textarea,label,.tok,[data-run]')) inp.focus({ preventScroll: true }); });
+$('#console').addEventListener('click', e => { if (e.target.closest('.out') && !getSelection().toString() && !e.target.closest('a,button,input,textarea,label,.tok,[data-run]')) inp.focus({ preventScroll: true }); });
 
 // chips: the ones with blanks fill the prompt, the rest run
 const CHIPS = [['trace me', 'trace'], ['checkup', 'checkup'], ['link two wallets', '=link '], ['burner', 'burner new'], ['fingerprint', 'fingerprint'], ['strip a photo', 'strip'], ['scanner', 'scan'], ['radar', 'radar'], ['swap', '=swap 0.1 sol usdc'], ['help', 'help']];
 $('#chips').innerHTML = CHIPS.map(([l, c]) => `<button type="button" ${c.startsWith('=') ? `data-fill="${esc(c.slice(1))}"` : `data-run="${esc(c)}"`}>${esc(l)}</button>`).join('');
 
-// windows: the tmux bar, and on small screens the watch column as a window of its own
-function openWin(k) {
-  if (k === 'watch') { document.body.dataset.win = 'watch'; $$('#tmux [data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === 'watch')); $$('#wins .win').forEach(w => { w.hidden = true; }); return; }
-  showTab(k);
-}
-$$('#tmux [data-tab]').forEach(b => b.onclick = () => openWin(b.dataset.tab));
+// views: the rail on the left (a tab bar on phones). the console stays docked under the stage, and can be resized or maximized.
+function openWin(k) { if (k === 'out') { showTab('out'); inp.focus({ preventScroll: true }); return; } showTab(k); }
+$$('#rail [data-tab]').forEach(b => b.onclick = () => openWin(b.dataset.tab));
+const CON = { h: null };
+try { const v = +localStorage.getItem('st3:con'); if (v > 120) CON.h = v; } catch {}
+function setCon(px) { const H = $('#main').getBoundingClientRect().height; px = Math.max(110, Math.min(H - 150, px)); CON.h = px; document.documentElement.style.setProperty('--con', px + 'px'); try { localStorage.setItem('st3:con', String(Math.round(px))); } catch {} }
+if (CON.h) document.documentElement.style.setProperty('--con', CON.h + 'px');
+function conMax() { document.body.classList.toggle('conmax'); $('#con-max').textContent = document.body.classList.contains('conmax') ? '⤡' : '⤢'; const o = $('#out'); if (o) o.scrollTop = o.scrollHeight; window.dispatchEvent(new Event('resize')); }
+$('#con-max').onclick = conMax;
+{ const sp = $('#split'); let y0 = 0, h0 = 0;
+  sp.addEventListener('pointerdown', e => { if (document.body.classList.contains('conmax')) return; y0 = e.clientY; h0 = $('#console').getBoundingClientRect().height; sp.setPointerCapture(e.pointerId); document.body.classList.add('dragging'); });
+  sp.addEventListener('pointermove', e => { if (!document.body.classList.contains('dragging')) return; setCon(h0 + (y0 - e.clientY)); });
+  const end = () => { if (!document.body.classList.contains('dragging')) return; document.body.classList.remove('dragging'); window.dispatchEvent(new Event('resize')); };
+  sp.addEventListener('pointerup', end); sp.addEventListener('pointercancel', end); sp.addEventListener('dblclick', conMax); }
+// on a phone the mask switch and the sound move up into the top bar, since the rail becomes a tab bar
+function placeControls() { const sm = innerWidth <= 980, to = sm ? $('#hud .hud-r') : $('#rail .r-foot'); for (const id of ['b-snd', 'b-mask']) { const el = document.getElementById(id); if (el && el.parentElement !== to) to.prepend(el); } }
+placeControls(); addEventListener('resize', placeControls);
 addEventListener('st3:win', e => { if (e.detail === 'man') manual(); if (e.detail === 'radar') radar(); });
 $('#chart').addEventListener('mousemove', chartHover); $('#chart').addEventListener('mouseleave', chartRedraw); addEventListener('resize', chartRedraw);
 
 // ---------------------------------------------------------------- the palette (ctrl k): commands and windows
 let palSel = 0, palList = [];
-const WIN_ITEMS = [['shell', 'out', 'window 0 · the prompt and everything it prints'], ['scan', 'pulse', 'window 1 · every pump.fun coin as it is born'], ['trace', 'trace', 'window 2 · who can see a wallet'], ['chart', 'chart', 'window 3 · candles and live trades'], ['radar', 'radar', 'window 4 · mission control'], ['orders', 'orders', 'window 5 · limit orders and dca'], ['man', 'man', 'window 6 · the manual'], ['check', 'check', 'window 7 · a full privacy checkup of a wallet and this browser']];
+const WIN_ITEMS = [['console', 'out', 'alt 0 · the prompt and everything it prints'], ['radar', 'radar', 'view 1 · mission control: solana, pump.fun, majors, movers, stocks'], ['scan', 'pulse', 'view 2 · every pump.fun coin as it is born'], ['trace', 'trace', 'view 3 · who can see a wallet'], ['chart', 'chart', 'view 4 · candles and live trades'], ['orders', 'orders', 'view 5 · your limit orders and dca plans'], ['check', 'check', 'view 6 · a full privacy checkup'], ['watch', 'watch', 'view 7 · births, trending, stocks, your mask and wallet'], ['manual', 'man', 'view 8 · how everything works']];
 function openPal() { const p = $('#pal'); p.hidden = false; $('#pal-in').value = ''; paintPal(); setTimeout(() => $('#pal-in').focus(), 10); }
 function closePal() { $('#pal').hidden = true; inp.focus({ preventScroll: true }); }
 function paintPal() {
@@ -153,7 +165,7 @@ $('#b-wal').onclick = () => { const s = SG.state(); runFrom(s.active ? 'wallet' 
 // ---------------------------------------------------------------- sound: the room tone from the intro keeps playing, quietly
 const SPK = on => `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 9h3l5-4v14l-5-4H4z"/>${on ? '<path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/>' : '<path d="M16 9l5 6M21 9l-5 6"/>'}</svg>`;
 let soundOn = (() => { try { return localStorage.getItem('st3:mute') !== '1'; } catch { return true; } })(), SND = null;
-async function sound() { if (!SND) { const m = await import('./sound.js?v=1'); SND = m.createSound(); } return SND; }
+async function sound() { if (!SND) { const m = await import('./sound.js?v=2'); SND = m.createSound(); } return SND; }
 async function setSound(on) {
   soundOn = on; try { localStorage.setItem('st3:mute', on ? '0' : '1'); } catch {}
   $('#b-snd').innerHTML = SPK(on); if (window.__st3Sound) window.__st3Sound.setMuted(!on); const s = await sound();
@@ -163,10 +175,12 @@ $('#b-snd').innerHTML = SPK(soundOn); $('#b-snd').onclick = () => setSound(!soun
 addEventListener('st3:sound', e => { const d = e.detail; setSound(d === 'on' ? true : d === 'off' ? false : !soundOn); line(`<span class="o">✓</span> sound ${soundOn ? 'on' : 'off'}`); });
 
 // ---------------------------------------------------------------- boot
-const MASK = () => document.querySelector('.brand .mk').outerHTML;
-async function boot() {
-  const app = $('#app'); app.classList.remove('boot'); void app.offsetWidth; app.classList.add('on');
+const MASK = () => document.querySelector('.r-brand .mk').outerHTML;
+async function boot({ fromIntro = false } = {}) {
+  // straight out of the intro the screen just comes up (you already opened your eyes); otherwise it opens like an eye
+  const app = $('#app'); app.classList.remove('boot'); void app.offsetWidth; app.classList.add(fromIntro ? 'lit' : 'on');
   initOut(); window.__st3Sess = SESS; startPanes();
+  if (innerWidth > 980) showTab('radar'); else showTab('out');
   if (CA) { const m = $('#hud-m'); m.insertAdjacentHTML('afterbegin', `<button type="button" class="ca" data-copy="${CA}" title="copy the contract address"><i>CA</i><code>${CA}</code><u>copy</u></button>`); }
   const t0 = performance.now(), ts = () => `<span class="f">[${((performance.now() - t0) / 1000).toFixed(3).padStart(7)}]</span>`;
   const L = (k, v) => line(`${ts()} ${dots(k, v, 26)}`, 'bt');
@@ -208,11 +222,11 @@ function foldBoot(els, hint, html) {
 // ---------------------------------------------------------------- the intro, then the terminal
 const params = new URLSearchParams(location.search);
 async function playIntro(force) {
-  try { const m = await import('../intro.js?v=1'); window.__st3Sound = m.SOUND; await new Promise(res => m.runIntro(res, { force })); }
-  catch (e) { console.warn(e); }
+  try { const m = await import('../intro.js?v=2'); window.__st3Sound = m.SOUND; return await new Promise(res => m.runIntro(played => res(played !== false), { force })); }
+  catch (e) { console.warn(e); return false; }
 }
 (async () => {
-  if (!params.has('nointro')) await playIntro(false);
-  boot();
+  const played = params.has('nointro') ? false : await playIntro(false);
+  boot({ fromIntro: played });
 })();
 addEventListener('st3:intro', () => { playIntro(true).then(() => { const app = $('#app'); app.classList.remove('on'); void app.offsetWidth; app.classList.add('on'); line('<span class="d">back behind the mask.</span>'); }); });
