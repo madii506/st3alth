@@ -404,7 +404,7 @@ def('exit', 'system', 'exit', '', () => line('<span class="d">there is no exit. 
 
 // ---------------------------------------------------------------- tabs inside the console
 // windows, like tmux: one shows at a time, the others keep their state. alt+0..7 or the bar at the bottom.
-const WINS = { out: 'w-shell', pulse: 'w-scan', trace: 'w-trace', chart: 'w-chart', radar: 'w-radar', orders: 'w-orders', man: 'w-man' };
+const WINS = { out: 'w-shell', pulse: 'w-scan', trace: 'w-trace', chart: 'w-chart', radar: 'w-radar', orders: 'w-orders', man: 'w-man', check: 'w-check' };
 export function showTab(k) {
   if (k === 'console' || k === 'shell') k = 'out'; if (k === 'scan' || k === 'scanner') k = 'pulse';
   const prev = document.body.dataset.win || 'out'; document.body.dataset.win = k;

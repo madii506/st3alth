@@ -9,12 +9,14 @@ const CARDS = [
   ['masked', 'a screen that keeps quiet', 'your own balances and addresses blur until you hover them. shift+esc hides everything at once, for streams and screenshots.', 'mask'],
   ['trade', 'every dex, one line', 'swaps routed by jupiter across every solana dex, limit orders, dca, tokenized stocks. you see the exact route and fees before your wallet signs.', 'swap 0.1 sol usdc'],
   ['scan', 'every coin as it is born', 'pump.fun births, the final stretch and graduations, live, with the numbers trenchers check first: top holders, dev history, bots, bundles.', 'scan'],
+  ['checkup', 'one page, every leak', 'exposure, threats, approvals, your browser fingerprint, this tab and your signer, audited together, graded, with the fixes in order.', 'checkup'],
+  ['link', 'are these two wallets linked?', 'direct transfers, a shared funder, private wallets in common, the same hours. see what ties two wallets together before someone else does.', 'link'],
   ['threats', 'who is working against you', 'every trace looks for address poisoning (a look-alike of a wallet you pay, planted in your history with a tiny transfer) and for dust from strangers.', 'trace'],
   ['approvals', 'who can move your tokens', 'token approvals are standing permissions that drainers wait on. see every one on a wallet, and revoke them all with a single signature.', 'approvals'],
   ['fingerprint', 'what your browser gives away', 'the twelve signals any site can read without asking, hashed the way trackers do. it is worked out in your tab and sent nowhere.', 'fingerprint'],
   ['strip', 'what your photos give away', 'drop a photo anywhere: see its gps, phone, serial and time, then save a clean copy, checked by reading it back. it never leaves your tab.', 'strip'],
 ];
-const KEYS = [['ctrl k', 'the palette: every command and window'], ['alt 0 … 6', 'switch window'], ['tab / →', 'take the suggestion'], ['↑ ↓', 'history'], ['ctrl l', 'clear the shell'], ['/', 'back to the prompt'], ['shift esc', 'panic: hide the screen'], ['esc', 'skip the intro, close the palette']];
+const KEYS = [['ctrl k', 'the palette: every command and window'], ['alt 0 … 7', 'switch window'], ['tab / →', 'take the suggestion'], ['↑ ↓', 'history'], ['ctrl l', 'clear the shell'], ['/', 'back to the prompt'], ['shift esc', 'panic: hide the screen'], ['esc', 'skip the intro, close the palette']];
 const FAQ = [
   ['is st3alth a mixer?', 'no. st3alth never holds or pools anyone\'s funds. it shows you what is already public, gives you burners that live in your own tab, and keeps your browser from talking to anyone but itself.'],
   ['can trace see my private keys or my history if i trace myself?', 'no. trace reads only what is public on the chain, through helius, the same way anyone could. your keys never leave your wallet or your tab.'],

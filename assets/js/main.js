@@ -8,6 +8,7 @@ import { counted, setExtraRunner, aliasOf, stopTop, cwd } from './extra.js?v=1';
 import { radar } from './dash.js?v=1';
 import { runTrace, setMasked } from './privacy.js?v=1';
 import './tools.js';
+import './check.js';
 import { manual } from './man.js?v=1';
 
 const dirOf = () => { const d = cwd(); return d === '/home/anon' ? '~' : d.replace('/home/anon', '~'); };
@@ -34,7 +35,7 @@ export async function run(cmd, { echo = true } = {}) {
   finally { busy--; if (!busy) document.body.classList.remove('busy'); meta(); }
 }
 // commands that open their own window stay there; everything else prints in the shell
-const STAY = new Set(['trace', 'tr', 'expose', 'scan', 'chart', 'c', 'radar', 'dash', 'dashboard', 'mission', 'orders', 'docs', 'man', 'manual', 'intro', 'panic', 'hide']);
+const STAY = new Set(['checkup', 'audit', 'check', 'trace', 'tr', 'expose', 'scan', 'chart', 'c', 'radar', 'dash', 'dashboard', 'mission', 'orders', 'docs', 'man', 'manual', 'intro', 'panic', 'hide']);
 const runFrom = c => { const w = String(c).trim().split(/\s+/)[0].toLowerCase(); if (!STAY.has(w)) showTab('out'); return run(c); };
 setRunner(runFrom); setPaneRunner(runFrom); setExtraRunner(runFrom);
 addEventListener('st3:open', e => showTab(e.detail));
@@ -100,11 +101,11 @@ inp.addEventListener('keydown', e => {
   else if (e.key === 'l' && e.ctrlKey) { e.preventDefault(); clear(); }
 });
 // keys: ctrl k palette, alt+digit windows, / to the prompt, esc closes the palette
-const TABS = ['out', 'pulse', 'trace', 'chart', 'radar', 'orders', 'man', 'watch'];
+const TABS = ['out', 'pulse', 'trace', 'chart', 'radar', 'orders', 'man', 'check', 'watch'];
 addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openPal(); }
   else if (e.key === 'Escape' && !$('#pal').hidden) closePal();
-  else if (e.altKey && /^Digit[0-7]$/.test(e.code)) { e.preventDefault(); openWin(TABS[+e.code.slice(5)]); }
+  else if (e.altKey && /^Digit[0-8]$/.test(e.code)) { e.preventDefault(); openWin(TABS[+e.code.slice(5)]); }
   else if (e.key === '/' && (document.activeElement === document.body || !document.activeElement)) { e.preventDefault(); inp.focus({ preventScroll: true }); }
 });
 document.addEventListener('click', e => {
@@ -116,7 +117,7 @@ document.addEventListener('click', e => {
 $('#w-shell').addEventListener('click', e => { if (e.target.closest('.out') && !getSelection().toString() && !e.target.closest('a,button,input,textarea,label,.tok,[data-run]')) inp.focus({ preventScroll: true }); });
 
 // chips: the ones with blanks fill the prompt, the rest run
-const CHIPS = [['trace me', 'trace'], ['exposure', 'exposure'], ['burner', 'burner new'], ['fingerprint', 'fingerprint'], ['strip a photo', 'strip'], ['scanner', 'scan'], ['radar', 'radar'], ['swap', '=swap 0.1 sol usdc'], ['help', 'help']];
+const CHIPS = [['trace me', 'trace'], ['checkup', 'checkup'], ['link two wallets', '=link '], ['burner', 'burner new'], ['fingerprint', 'fingerprint'], ['strip a photo', 'strip'], ['scanner', 'scan'], ['radar', 'radar'], ['swap', '=swap 0.1 sol usdc'], ['help', 'help']];
 $('#chips').innerHTML = CHIPS.map(([l, c]) => `<button type="button" ${c.startsWith('=') ? `data-fill="${esc(c.slice(1))}"` : `data-run="${esc(c)}"`}>${esc(l)}</button>`).join('');
 
 // windows: the tmux bar, and on small screens the watch column as a window of its own
@@ -130,7 +131,7 @@ $('#chart').addEventListener('mousemove', chartHover); $('#chart').addEventListe
 
 // ---------------------------------------------------------------- the palette (ctrl k): commands and windows
 let palSel = 0, palList = [];
-const WIN_ITEMS = [['shell', 'out', 'window 0 · the prompt and everything it prints'], ['scan', 'pulse', 'window 1 · every pump.fun coin as it is born'], ['trace', 'trace', 'window 2 · who can see a wallet'], ['chart', 'chart', 'window 3 · candles and live trades'], ['radar', 'radar', 'window 4 · mission control'], ['orders', 'orders', 'window 5 · limit orders and dca'], ['man', 'man', 'window 6 · the manual']];
+const WIN_ITEMS = [['shell', 'out', 'window 0 · the prompt and everything it prints'], ['scan', 'pulse', 'window 1 · every pump.fun coin as it is born'], ['trace', 'trace', 'window 2 · who can see a wallet'], ['chart', 'chart', 'window 3 · candles and live trades'], ['radar', 'radar', 'window 4 · mission control'], ['orders', 'orders', 'window 5 · limit orders and dca'], ['man', 'man', 'window 6 · the manual'], ['check', 'check', 'window 7 · a full privacy checkup of a wallet and this browser']];
 function openPal() { const p = $('#pal'); p.hidden = false; $('#pal-in').value = ''; paintPal(); setTimeout(() => $('#pal-in').focus(), 10); }
 function closePal() { $('#pal').hidden = true; inp.focus({ preventScroll: true }); }
 function paintPal() {
