@@ -790,3 +790,27 @@ body.dropping #app::before{content:"drop it. it stays in this tab.";position:fix
   .win.enter{animation:none}.win.enter::before{display:none}
   .cf-r b::after{display:none}.cf-stamp{opacity:.9;transform:rotate(-8deg)}.cf-b{animation:none;stroke-dashoffset:0}.cf-ph::after{display:none}
 }
+
+/* ---------------------------------------------------------------- round 6: the dev, the world map, the prompt, the heartbeat */
+.bd-dev{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;margin:10px 0 2px;padding:9px 11px;border:1px solid rgba(234,159,159,.28);border-radius:8px;background:rgba(234,159,159,.04);font-size:12px;line-height:1.6}
+.bd-dk{font:700 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:#050505;background:var(--down);border-radius:3px;padding:4px 6px;margin-top:2px}
+.bd-dev b{color:var(--fg);font-weight:500}
+.tag.dv{border-color:rgba(234,159,159,.5);color:var(--down)}
+.bd-kv>div:nth-child(5),.bd-kv>div:nth-child(6){border-top:0}
+.cf-map{margin-top:18px;padding-top:14px;border-top:1px solid var(--line2)}
+.cf-map canvas{display:block;width:100%;height:auto;aspect-ratio:8/3}
+.cf-ml{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:11.5px;color:var(--amber);letter-spacing:.04em}
+#tin{position:relative}
+#tin.fire::after{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:var(--amber);transform-origin:left center;animation:fire .5s var(--ease) both;pointer-events:none}
+@keyframes fire{from{transform:scaleX(0);opacity:1}70%{opacity:.9}to{transform:scaleX(1);opacity:0}}
+.ln.glitch{animation:glitch .36s steps(6) both}
+@keyframes glitch{0%{transform:none;clip-path:inset(0)}17%{transform:translateX(-4px);clip-path:inset(0 0 52% 0)}34%{transform:translateX(3px);clip-path:inset(48% 0 0 0)}51%{transform:translateX(-2px);clip-path:inset(20% 0 30% 0)}68%{transform:translateX(1px);clip-path:inset(0)}100%{transform:none;clip-path:inset(0)}}
+.rsearch{position:absolute;left:0;right:0;bottom:100%;margin-bottom:6px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;padding:7px 12px;border:1px solid var(--line2);border-radius:8px;background:rgba(8,8,9,.97);font-size:12.5px;z-index:20;animation:lnIn .18s var(--ease) both}
+.rs-k{color:var(--faint);font-size:11px;letter-spacing:.06em}
+.rs-q{color:var(--amber)}
+.rs-m{color:var(--fg2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1}
+.rs-m b{color:var(--fg);font-weight:500;text-decoration:underline;text-decoration-color:var(--amber);text-underline-offset:3px}
+.rs-h{color:var(--faint);font-size:10.5px}
+.ekg{width:64px;height:14px;margin-left:8px;vertical-align:-2px;display:inline-block}
+@media (max-width:1180px){.ekg{display:none}}
+@media (prefers-reduced-motion:reduce){.ln.glitch,#tin.fire::after{animation:none}}
