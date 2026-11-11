@@ -592,3 +592,34 @@ body.dropping #app::before{content:"drop it. it stays in this tab.";position:fix
 .apv>div{display:grid;grid-template-columns:90px 170px minmax(0,1fr);gap:10px;align-items:baseline;padding:8px 0 8px 10px;border-bottom:1px solid #111114;border-left:2px solid var(--warn);font-size:12.5px;animation:rowIn .4s var(--ease) both}
 .apv>div.hi{border-left-color:var(--down)}.apv b{font-weight:600;color:#fff}.apv em{font-style:normal;color:var(--down);font-weight:500}.apv i{font-style:normal;color:var(--faint)}.apv code{font-family:var(--mono);color:var(--fg2)}
 @media (max-width:700px){.apv>div{grid-template-columns:70px minmax(0,1fr)}.apv>div>span:last-child{grid-column:1/-1}}
+
+/* ---------------------------------------------------------------- window 7: the checkup */
+.ckbox{padding:24px 28px 36px}
+.ck-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:18px;flex-wrap:wrap}
+.ck-head h2{font-family:var(--disp);font-weight:700;font-size:clamp(22px,2.6vw,30px);letter-spacing:-.3px;margin:4px 0 6px;color:#fff;max-width:28ch;line-height:1.1}
+.ck-head p{margin:0}
+.ck-grade{display:grid;justify-items:end;gap:2px}.ck-grade b{font-family:var(--disp);font-size:72px;line-height:.9;font-weight:700;color:#fff}.ck-grade span{color:var(--faint);font-size:12px}
+.ck-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.ck-c{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:14px 16px 16px;min-height:150px;display:grid;grid-template-rows:auto 1fr auto;gap:8px;position:relative;animation:rowIn .45s var(--ease) both;background:#070708}
+.ck-c::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:transparent}
+.ck-c.hi::before{background:var(--down)}.ck-c.mid::before{background:var(--warn)}.ck-c.ok::before{background:var(--up)}
+.ck-c h5{margin:0;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:500}
+.ck-b{display:block;min-width:0}.ck-b:has(>.ck-ring){display:flex;gap:14px;align-items:center}.ck-b>div{min-width:0}.ck-b p{margin:4px 0 0;font-size:12px}
+.ck-big{display:block;font-family:var(--disp);font-size:22px;font-weight:700;color:#fff;line-height:1.1;overflow-wrap:anywhere}.ck-big.r{color:var(--down)}.ck-big.w{color:var(--warn)}.ck-big.g{color:var(--up)}
+.ck-ring{position:relative;width:84px;height:84px;flex:none}.ck-ring b{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--disp);font-size:24px;color:#fff}
+.ck-arc{transition:stroke-dasharray 1s var(--ease)}
+.ck-a{font-size:12px}
+.ck-fix{margin-top:22px}.ck-fix h5{margin:0 0 10px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);font-weight:500}
+.ck-f{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid #111114;animation:rowIn .45s var(--ease) both}
+.ck-f>span{width:22px;height:22px;border-radius:50%;border:1px solid var(--line2);display:grid;place-items:center;font-size:11px;color:var(--fg2)}.ck-f p{margin:0;font-size:12.5px;color:var(--fg2)}
+@media (max-width:900px){.ck-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.ckbox{padding:16px 14px 28px}.ck-grid{grid-template-columns:1fr}.ck-grade b{font-size:54px}.ck-c{min-height:0}}
+/* link: two wallets and what sits between them */
+.lk-top{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}.lk-top b{font-family:var(--disp);font-size:clamp(24px,3vw,32px);font-weight:700}.lk-top span{color:var(--faint);font-size:12px}
+.lks{width:100%;max-width:640px;height:auto;display:block;margin:6px 0 10px;overflow:visible}
+.lks text{font:500 11px var(--mono);fill:var(--fg2)}.lks text.f{fill:var(--faint)}.lks .lk-k{font-weight:700;fill:#000;font-size:12px}
+.lk-n{fill:#0b0b0c;stroke:var(--fg2);stroke-width:1.5}.lk-n.a,.lk-n.b{fill:var(--fg);stroke:none}.lk-n.fund{stroke:var(--down)}.lk-n.cex{stroke:var(--warn)}.lk-n.cp{stroke:var(--amber)}
+.lk-l{fill:none;stroke:rgba(238,235,228,.35);stroke-width:1.3;stroke-dasharray:600;stroke-dashoffset:600;animation:lkDraw 1.1s var(--ease) forwards}
+.lk-l.fund{stroke:rgba(234,159,159,.7)}.lk-l.cex{stroke:rgba(231,197,140,.55)}.lk-l.cp{stroke:rgba(217,160,102,.65)}.lk-l.direct{stroke:var(--down);stroke-width:2.2}.lk-l.none{stroke:#26262a;stroke-dasharray:4 6;animation:none;stroke-dashoffset:0}
+@keyframes lkDraw{to{stroke-dashoffset:0}}
+.lk-ev{margin-top:4px}
