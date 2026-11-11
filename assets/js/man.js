@@ -1,6 +1,6 @@
 // st3alth · the manual: window 6. What st3alth does, what it hides and what stays public, the keys, every command, faq.
-import { $, esc } from './core.js?v=2';
-import { CMDS } from './cmds.js?v=2';
+import { $, esc } from './core.js?v=4';
+import { CMDS } from './cmds.js?v=4';
 
 const CARDS = [
   ['trace', 'who can see you', 'paste any wallet. st3alth follows its first SOL back through up to three funders, labels every exchange and protocol on the way, maps who it talks to, and scores how close it is to a name.', 'trace'],
@@ -15,6 +15,10 @@ const CARDS = [
   ['threats', 'who is working against you', 'every trace looks for address poisoning (a look-alike of a wallet you pay, planted in your history with a tiny transfer) and for dust from strangers.', 'trace'],
   ['approvals', 'who can move your tokens', 'token approvals are standing permissions that drainers wait on. see every one on a wallet, and revoke them all with a single signature.', 'approvals'],
   ['fingerprint', 'what your browser gives away', 'the twelve signals any site can read without asking, hashed the way trackers do. it is worked out in your tab and sent nowhere.', 'fingerprint'],
+  ['bundle', 'who is really holding it', 'any coin: its twenty biggest holders, the wallet that sent each one its first SOL, and the clusters that came from one hand. bundles stop hiding.', 'bundle'],
+  ['file', 'the file on a wallet', 'names, funders, the exchange at the root, who it pays, what it holds, when it sleeps and where that puts it. what a stranger can pull together in a second.', 'file'],
+  ['vanity', 'a burner with your letters', 'grind a keypair whose address starts or ends with letters you pick. every key is made in this tab by your own cpu, and none of them is sent anywhere.', 'vanity st3 -i'],
+  ['sonar', 'every birth on one screen', 'the radar sweeps pump.fun: each new coin lands as a blip and drifts outward as it ages. hover one to see it, click it for the full report.', 'radar'],
   ['strip', 'what your photos give away', 'drop a photo anywhere: see its gps, phone, serial and time, then save a clean copy, checked by reading it back. it never leaves your tab.', 'strip'],
 ];
 const KEYS = [['ctrl k', 'the palette: every command and window'], ['alt 0 … 7', 'switch window'], ['tab / →', 'take the suggestion'], ['↑ ↓', 'history'], ['ctrl l', 'clear the shell'], ['/', 'back to the prompt'], ['shift esc', 'panic: hide the screen'], ['esc', 'skip the intro, close the palette']];

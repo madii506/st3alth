@@ -1,15 +1,17 @@
 // st3alth · the terminal: the intro hand-off, the boot, the prompt (history, ghost completion, token search), windows
 // (alt+0..7), the palette (ctrl k), masked mode, sound. One prompt drives every window.
-import { $, $$, esc, sleep, line, initOut, api, pushHist, history, clear, toast, SEEN, dots, follow, imgErr, psHtml, copy, CA } from './core.js?v=2';
-import { CMDS, ALIAS, setRunner, showTab, chartHover, chartRedraw } from './cmds.js?v=2';
-import { startPanes, setPaneRunner, engineLine } from './panes.js?v=2';
-import * as SG from './signer.js?v=2';
-import { counted, setExtraRunner, aliasOf, stopTop, cwd } from './extra.js?v=2';
-import { radar } from './dash.js?v=2';
-import { runTrace, setMasked } from './privacy.js?v=2';
+import { $, $$, esc, sleep, line, initOut, api, pushHist, history, clear, toast, SEEN, dots, follow, imgErr, psHtml, copy, CA } from './core.js?v=4';
+import { CMDS, ALIAS, setRunner, showTab, chartHover, chartRedraw } from './cmds.js?v=4';
+import { startPanes, setPaneRunner, engineLine } from './panes.js?v=4';
+import * as SG from './signer.js?v=4';
+import { counted, setExtraRunner, aliasOf, stopTop, cwd } from './extra.js?v=4';
+import { radar } from './dash.js?v=4';
+import { runTrace, setMasked } from './privacy.js?v=4';
 import './tools.js';
 import './check.js';
-import { manual } from './man.js?v=2';
+import './fx.js';
+import './deep.js';
+import { manual } from './man.js?v=4';
 
 const dirOf = () => { const d = cwd(); return d === '/home/anon' ? '~' : d.replace('/home/anon', '~'); };
 const P = () => `<span class="p">${psHtml(dirOf())}</span>`;
@@ -118,7 +120,7 @@ document.addEventListener('click', e => {
 $('#console').addEventListener('click', e => { if (e.target.closest('.out') && !getSelection().toString() && !e.target.closest('a,button,input,textarea,label,.tok,[data-run]')) inp.focus({ preventScroll: true }); });
 
 // chips: the ones with blanks fill the prompt, the rest run
-const CHIPS = [['trace me', 'trace'], ['checkup', 'checkup'], ['link two wallets', '=link '], ['burner', 'burner new'], ['fingerprint', 'fingerprint'], ['strip a photo', 'strip'], ['scanner', 'scan'], ['radar', 'radar'], ['swap', '=swap 0.1 sol usdc'], ['help', 'help']];
+const CHIPS = [['trace me', 'trace'], ['file on me', 'file'], ['bundle check', 'bundle'], ['vanity burner', '=vanity st3 -i'], ['checkup', 'checkup'], ['link two wallets', '=link '], ['fingerprint', 'fingerprint'], ['strip a photo', 'strip'], ['scanner', 'scan'], ['help', 'help']];
 $('#chips').innerHTML = CHIPS.map(([l, c]) => `<button type="button" ${c.startsWith('=') ? `data-fill="${esc(c.slice(1))}"` : `data-run="${esc(c)}"`}>${esc(l)}</button>`).join('');
 
 // views: the rail on the left (a tab bar on phones). the console stays docked under the stage, and can be resized or maximized.
@@ -143,7 +145,7 @@ $('#chart').addEventListener('mousemove', chartHover); $('#chart').addEventListe
 
 // ---------------------------------------------------------------- the palette (ctrl k): commands and windows
 let palSel = 0, palList = [];
-const WIN_ITEMS = [['console', 'out', 'alt 0 · the prompt and everything it prints'], ['radar', 'radar', 'view 1 · mission control: solana, pump.fun, majors, movers, stocks'], ['scan', 'pulse', 'view 2 · every pump.fun coin as it is born'], ['trace', 'trace', 'view 3 · who can see a wallet'], ['chart', 'chart', 'view 4 · candles and live trades'], ['orders', 'orders', 'view 5 · your limit orders and dca plans'], ['check', 'check', 'view 6 · a full privacy checkup'], ['watch', 'watch', 'view 7 · births, trending, stocks, your mask and wallet'], ['manual', 'man', 'view 8 · how everything works']];
+const WIN_ITEMS = [['console', 'out', 'alt 0 · the prompt and everything it prints'], ['radar', 'radar', 'view 1 · mission control: solana, pump.fun, majors, movers, stocks'], ['scan', 'pulse', 'view 2 · every pump.fun coin as it is born'], ['trace', 'trace', 'view 3 · who can see a wallet'], ['chart', 'chart', 'view 4 · candles and live trades'], ['orders', 'orders', 'view 5 · your limit orders and dca plans'], ['check', 'check', 'view 6 · a full privacy checkup'], ['watch', 'watch', 'view 7 · births, trending, stocks, your mask and wallet'], ['manual', 'man', 'view 8 · how everything works'], ['bundle', 'bundle', 'who funded the top holders of a coin'], ['file', 'file', 'the case file on a wallet']];
 function openPal() { const p = $('#pal'); p.hidden = false; $('#pal-in').value = ''; paintPal(); setTimeout(() => $('#pal-in').focus(), 10); }
 function closePal() { $('#pal').hidden = true; inp.focus({ preventScroll: true }); }
 function paintPal() {
@@ -165,7 +167,7 @@ $('#b-wal').onclick = () => { const s = SG.state(); runFrom(s.active ? 'wallet' 
 // ---------------------------------------------------------------- sound: the room tone from the intro keeps playing, quietly
 const SPK = on => `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 9h3l5-4v14l-5-4H4z"/>${on ? '<path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/>' : '<path d="M16 9l5 6M21 9l-5 6"/>'}</svg>`;
 let soundOn = (() => { try { return localStorage.getItem('st3:mute') !== '1'; } catch { return true; } })(), SND = null;
-async function sound() { if (!SND) { const m = await import('./sound.js?v=2'); SND = m.createSound(); } return SND; }
+async function sound() { if (!SND) { const m = await import('./sound.js?v=4'); SND = m.createSound(); } return SND; }
 async function setSound(on) {
   soundOn = on; try { localStorage.setItem('st3:mute', on ? '0' : '1'); } catch {}
   $('#b-snd').innerHTML = SPK(on); if (window.__st3Sound) window.__st3Sound.setMuted(!on); const s = await sound();
@@ -222,7 +224,7 @@ function foldBoot(els, hint, html) {
 // ---------------------------------------------------------------- the intro, then the terminal
 const params = new URLSearchParams(location.search);
 async function playIntro(force) {
-  try { const m = await import('../intro.js?v=2'); window.__st3Sound = m.SOUND; return await new Promise(res => m.runIntro(played => res(played !== false), { force })); }
+  try { const m = await import('../intro.js?v=4'); window.__st3Sound = m.SOUND; return await new Promise(res => m.runIntro(played => res(played !== false), { force })); }
   catch (e) { console.warn(e); return false; }
 }
 (async () => {

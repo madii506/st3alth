@@ -1,7 +1,7 @@
 // st3alth · who signs: your wallet (Wallet Standard, by hand) or a burner born in this tab.
 // A burner's secret never leaves the page; it is gone when the tab closes unless you save the key file.
-import * as WAL from './wallet98.js?v=2';
-import { b58, unb64, b64, unb58 } from './core.js?v=2';
+import * as WAL from './wallet98.js?v=4';
+import { b58, unb64, b64, unb58 } from './core.js?v=4';
 export { WAL };
 let BURN = null, USE = 'wallet';
 const subs = new Set(); const fire = () => subs.forEach(f => { try { f(state()); } catch {} });
@@ -12,6 +12,7 @@ export function state() {
   return { wallet: w ? { address: w.address, name: w.name } : null, burner: BURN ? { address: BURN.pub, saved: BURN.saved } : null, use: USE, active: USE === 'burner' && BURN ? BURN.pub : w ? w.address : null };
 }
 export function newBurner() { const kp = nacl.sign.keyPair(); BURN = { pub: b58(kp.publicKey), kp, saved: false }; fire(); return BURN.pub; }
+export function adoptBurner(kp) { BURN = { pub: b58(kp.publicKey), kp, saved: false }; fire(); return BURN.pub; }
 export function loadBurner(text) {
   text = String(text || '').trim(); const sec = text.startsWith('[') ? Uint8Array.from(JSON.parse(text)) : unb58(text);
   const kp = sec.length === 32 ? nacl.sign.keyPair.fromSeed(sec) : nacl.sign.keyPair.fromSecretKey(sec);

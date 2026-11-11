@@ -1,13 +1,13 @@
 // st3alth · every command. Each one is real: quotes, transactions and data come from the chain (through Helius), Jupiter
 // and pump.fun; the wallet (or a burner born in this tab) signs. Nothing here is a demo.
-import { $, $$, api, esc, short, ago, usd, price, pct, amt, img, line, block, spinner, dots, sleep, clear, copy, toast, isAddr, unb64, b64, history, forgetHist, seen, SEEN, pic, CA, EXPO } from './core.js?v=2';
-import * as SG from './signer.js?v=2';
-import { drawChart, spark } from './chart.js?v=2';
-import { startPulse, stopPulse, setPulseRunner } from './pulse.js?v=2';
+import { $, $$, api, esc, short, ago, usd, price, pct, amt, img, line, block, spinner, dots, sleep, clear, copy, toast, isAddr, unb64, b64, history, forgetHist, seen, SEEN, pic, CA, EXPO } from './core.js?v=4';
+import * as SG from './signer.js?v=4';
+import { drawChart, spark } from './chart.js?v=4';
+import { startPulse, stopPulse, setPulseRunner } from './pulse.js?v=4';
 
 export const CMDS = {}, ALIAS = {};
 export const def = (name, cat, usage, help, run, alias = []) => { CMDS[name] = { name, cat, usage, help, run }; alias.forEach(a => { ALIAS[a] = name; }); };
-let RUN = () => {}; export const setRunner = f => { RUN = f; setPulseRunner(x => { showTab('out'); f(x); }); };
+let RUN = () => {}; export const run = c => RUN(c); export const setRunner = f => { RUN = f; setPulseRunner(x => { showTab('out'); f(x); }); };
 const tx = s => `<a href="https://solscan.io/tx/${s}" target="_blank" rel="noopener noreferrer">transaction ↗</a>`;
 const need = (cond, msg) => { if (!cond) throw new Error(msg); };
 const signerLabel = () => { const s = SG.state(); return s.use === 'burner' && s.burner ? `burner ${short(s.burner.address)}` : s.wallet ? `wallet ${short(s.wallet.address)}` : 'none'; };
@@ -239,7 +239,7 @@ def('token', 'market', 'token <ticker|name|mint>', 'a full report: price, liquid
     <canvas class="spark" data-sp></canvas>
     <div class="mtape" data-mt></div>
     <p class="d" style="margin:8px 0 0">risk ${r.html}${r.why.length ? ' <span class="f">· ' + esc(r.why.join(' · ')) + '</span>' : ' <span class="f">· nothing obvious. still do your own research.</span>'}</p>
-    <div class="row" style="margin-top:12px"><button type="button" class="btn sm" data-c="buy ${esc(t.mint)} 0.1">buy 0.1 SOL</button><button type="button" class="btn ghost sm" data-c="chart ${esc(t.mint)}">chart</button><button type="button" class="btn ghost sm" data-c="holders ${esc(t.mint)}">holders</button><button type="button" class="btn ghost sm" data-c="watch ${esc(t.mint)}">watch</button><button type="button" class="btn ghost sm" data-cp>copy mint</button>${t.launchpad === 'pump.fun' ? `<a class="btn ghost sm" href="https://pump.fun/coin/${esc(t.mint)}" target="_blank" rel="noopener noreferrer">pump.fun ↗</a>` : ''}</div>`);
+    <div class="row" style="margin-top:12px"><button type="button" class="btn sm" data-c="buy ${esc(t.mint)} 0.1">buy 0.1 SOL</button><button type="button" class="btn ghost sm" data-c="chart ${esc(t.mint)}">chart</button><button type="button" class="btn ghost sm" data-c="holders ${esc(t.mint)}">holders</button><button type="button" class="btn ghost sm" data-c="bundle ${esc(t.mint)}">bundle check</button><button type="button" class="btn ghost sm" data-c="watch ${esc(t.mint)}">watch</button><button type="button" class="btn ghost sm" data-cp>copy mint</button>${t.launchpad === 'pump.fun' ? `<a class="btn ghost sm" href="https://pump.fun/coin/${esc(t.mint)}" target="_blank" rel="noopener noreferrer">pump.fun ↗</a>` : ''}</div>`);
   b.querySelectorAll('[data-c]').forEach(x => x.onclick = () => RUN(x.dataset.c)); b.querySelector('[data-cp]').onclick = () => copy(t.mint);
   try { const o = await api('ohlcv', { params: { mint: t.mint, tf: '1h' } }); spark(b.querySelector('[data-sp]'), o.candles.slice(-72).map(c => c[4])); } catch { b.querySelector('[data-sp]').remove(); }
   const bh = b.querySelector('.bh'); bh.insertAdjacentHTML('beforeend', '<i class="live" title="live" style="margin-left:6px"></i>');
@@ -404,8 +404,8 @@ def('exit', 'system', 'exit', '', () => line('<span class="d">there is no exit. 
 
 // ---------------------------------------------------------------- views: the stage shows one at a time, the console is always docked below
 // (on a phone the two take turns). alt+0..8, the rail, the palette, or the command that needs the view.
-const WINS = { pulse: 'w-scan', trace: 'w-trace', chart: 'w-chart', radar: 'w-radar', orders: 'w-orders', man: 'w-man', check: 'w-check', watch: 'w-watch' };
-const LABEL = { out: 'console', pulse: 'scan', trace: 'trace', chart: 'chart', radar: 'radar', orders: 'orders', man: 'manual', check: 'checkup', watch: 'watch' };
+const WINS = { pulse: 'w-scan', trace: 'w-trace', chart: 'w-chart', radar: 'w-radar', orders: 'w-orders', man: 'w-man', check: 'w-check', watch: 'w-watch', bundle: 'w-bundle', file: 'w-file' };
+const LABEL = { out: 'console', pulse: 'scan', trace: 'trace', chart: 'chart', radar: 'radar', orders: 'orders', man: 'manual', check: 'checkup', watch: 'watch', bundle: 'bundle', file: 'file' };
 const small = () => innerWidth <= 980;
 function paintRail() {
   const B = document.body, on = small() && B.dataset.focus === 'console' ? 'out' : B.dataset.win;
