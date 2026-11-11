@@ -64,6 +64,15 @@ async function transfers(addr, pages = 3) {
 const isCex = id => !!id && (/exchange/i.test(id.type || '') || /centrali[sz]ed exchange/i.test(id.category || ''));
 const kind = id => !id ? null : isCex(id) ? 'cex' : /bridge/i.test(id.category || '') ? 'bridge' : /defi|amm|dex|protocol|stake|vault/i.test((id.category || '') + ' ' + (id.type || '')) ? 'defi' : /scam|hack|exploit|rug/i.test(id.category || '') ? 'risk' : 'known';
 
+// ---------------------------------------------------------------- follow: the newest moves of a wallet, for a live tail
+async function moves(addr) {
+  return L.cached('mv:' + addr, 8000, async () => {
+    const j = await hel(`/v1/wallet/${addr}/transfers?limit=25`), list = (j && j.data) || [];
+    const ids = await identities(list.map(x => x.counterparty).filter(Boolean)).catch(() => ({}));
+    return { addr, at: Date.now(), moves: list.map(x => ({ sig: x.signature, t: x.timestamp, dir: x.direction, amount: +x.amount || 0, sym: x.symbol || (x.mint === SOL ? 'SOL' : null), mint: x.mint, cp: x.counterparty || null, label: x.counterparty && ids[x.counterparty] ? ids[x.counterparty].name || null : null })) };
+  });
+}
+
 // ---------------------------------------------------------------- the trace
 async function trace(addr) {
   return L.cached('tr:' + addr, 600000, async () => {
@@ -179,6 +188,8 @@ function mock(op, q) {
   const chain = [{ addr: fake(a + 'f0'), name: null, type: null, amount: 2.4, date: new Date((now - 86400 * 41) * 1000).toISOString(), sig: fake('s0'), label: null, kind: null },
     { addr: fake(a + 'f1'), name: 'Binance 1', type: 'exchange', amount: 12.0, date: new Date((now - 86400 * 44) * 1000).toISOString(), sig: fake('s1'), label: cex, kind: 'cex' }];
   if (op === 'funded') return { addr: a, chain };
+  if (op === 'moves') { const k = Math.floor(Date.now() / 20000), names = ['Binance 1', null, 'Jupiter Aggregator', null, 'pump.fun', null, null, 'Coinbase 4'];
+    return { addr: a, at: Date.now(), moves: Array.from({ length: 25 }, (_, i) => { const g = H(a + (k - i)); return { sig: fake('mv' + a + (k - i)) + fake('mw' + (k - i)).slice(0, 44), t: now - i * 20, dir: g[0] % 2 ? 'in' : 'out', amount: +(g[1] / 30).toFixed(3), sym: g[2] % 3 ? 'SOL' : 'USDC', mint: null, cp: fake('cp' + (g[3] % 9)), label: names[g[3] % names.length] }; }) }; }
   if (op === 'approvals') return { owner: a, checked: 9, approvals: [
     { account: fake(a + 'ta1'), mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', delegate: fake(a + 'drainer'), amount: '18446744073709.551615', balance: '250', program: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA', label: null },
     { account: fake(a + 'ta2'), mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263', delegate: fake(a + 'dca'), amount: '1500000', balance: '4310000', program: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA', label: { name: 'Jupiter DCA', type: 'protocol', category: 'DeFi', tags: [] } }] };
@@ -202,7 +213,7 @@ module.exports = async (req, res) => {
   const qs = L.query(req), op = String(qs.op || '');
   try {
     if (L.limited('s:' + L.ip(req), 60, 60000)) throw L.err(429, 'Slow down a little.');
-    if (C.MOCK && ['net', 'trace', 'funded', 'ident', 'approvals'].includes(op)) { await new Promise(r => setTimeout(r, op === 'trace' ? 700 : 120)); return L.send(res, 200, { ok: true, ...mock(op, qs) }); }
+    if (C.MOCK && ['net', 'trace', 'funded', 'ident', 'approvals', 'moves'].includes(op)) { await new Promise(r => setTimeout(r, op === 'trace' ? 700 : 120)); return L.send(res, 200, { ok: true, ...mock(op, qs) }); }
     if (op === 'net') {
       return L.send(res, 200, { ok: true, ...(await L.cached('net', 8000, async () => {
         const t0 = Date.now(); let slot = null, ms = null, fee = null;
@@ -214,10 +225,11 @@ module.exports = async (req, res) => {
     if (op === 'approvals') { const o = String(qs.owner || qs.addr || '').trim(); if (!C.isAddr(o)) throw L.err(400, 'That is not a Solana address.'); return L.send(res, 200, { ok: true, ...(await approvals(o)) }, L.CACHE(5)); }
     if (op === 'revoke') { if (req.method !== 'POST') throw L.err(405, 'POST only.'); if (C.MOCK) throw L.err(501, 'mock: revoke is built against mainnet only.'); return L.send(res, 200, { ok: true, ...(await revokeBuild(await L.body(req, 16 * 1024))) }); }
     const addr = String(qs.addr || '').trim();
-    if (['trace', 'funded', 'ident'].includes(op)) {
+    if (['trace', 'funded', 'ident', 'moves'].includes(op)) {
       if (!C.isAddr(addr) && !/^[a-z0-9-]{1,63}\.(sol|bonk|abc|poor|backpack)$/i.test(addr)) throw L.err(400, 'That is not a Solana address or a .sol name.');
-      if (!KEY) throw L.err(503, `Helius is not set up on this server yet, so ${op === 'ident' ? 'labels are' : op === 'funded' ? 'funding lookups are' : 'trace is'} off. Add HELIUS_API_KEY in Vercel.`);
+      if (!KEY) throw L.err(503, `Helius is not set up on this server yet, so ${op === 'ident' ? 'labels are' : op === 'funded' ? 'funding lookups are' : op === 'moves' ? 'follow is' : 'trace is'} off. Add HELIUS_API_KEY in Vercel.`);
     }
+    if (op === 'moves') { if (L.limited('mv:' + L.ip(req), 40, 60000)) throw L.err(429, 'Following too fast. Give it a minute.'); return L.send(res, 200, { ok: true, ...(await moves(addr)) }, L.CACHE(5)); }
     if (op === 'trace') {
       let a = addr;
       if (!C.isAddr(a)) { const id = await hel(`/v1/wallet/${encodeURIComponent(a)}/identity`).catch(() => null); if (!id || !id.address) throw L.err(404, `No wallet found for ${a}.`); a = id.address; }
