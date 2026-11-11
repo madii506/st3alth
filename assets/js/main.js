@@ -1,17 +1,17 @@
 // st3alth · the terminal: the intro hand-off, the boot, the prompt (history, ghost completion, token search), windows
 // (alt+0..7), the palette (ctrl k), masked mode, sound. One prompt drives every window.
-import { $, $$, esc, sleep, line, initOut, api, pushHist, history, clear, toast, SEEN, dots, follow, imgErr, psHtml, copy, CA } from './core.js?v=6';
-import { CMDS, ALIAS, setRunner, showTab, chartHover, chartRedraw } from './cmds.js?v=6';
-import { startPanes, setPaneRunner, engineLine } from './panes.js?v=6';
-import * as SG from './signer.js?v=6';
-import { counted, setExtraRunner, aliasOf, stopTop, cwd } from './extra.js?v=6';
-import { radar } from './dash.js?v=6';
-import { runTrace, setMasked } from './privacy.js?v=6';
-import './tools.js?v=6';
-import './check.js?v=6';
-import './fx.js?v=6';
-import './deep.js?v=6';
-import { manual } from './man.js?v=6';
+import { $, $$, esc, sleep, line, initOut, api, pushHist, history, clear, toast, SEEN, dots, follow, imgErr, psHtml, copy, CA } from './core.js?v=7';
+import { CMDS, ALIAS, setRunner, showTab, chartHover, chartRedraw } from './cmds.js?v=7';
+import { startPanes, setPaneRunner, engineLine } from './panes.js?v=7';
+import * as SG from './signer.js?v=7';
+import { counted, setExtraRunner, aliasOf, stopTop, cwd } from './extra.js?v=7';
+import { radar } from './dash.js?v=7';
+import { runTrace, setMasked } from './privacy.js?v=7';
+import './tools.js?v=7';
+import './check.js?v=7';
+import './fx.js?v=7';
+import './deep.js?v=7';
+import { manual } from './man.js?v=7';
 
 const dirOf = () => { const d = cwd(); return d === '/home/anon' ? '~' : d.replace('/home/anon', '~'); };
 const P = () => `<span class="p">${psHtml(dirOf())}</span>`;
@@ -120,7 +120,7 @@ document.addEventListener('click', e => {
 $('#console').addEventListener('click', e => { if (e.target.closest('.out') && !getSelection().toString() && !e.target.closest('a,button,input,textarea,label,.tok,[data-run]')) inp.focus({ preventScroll: true }); });
 
 // chips: the ones with blanks fill the prompt, the rest run
-const CHIPS = [['trace me', 'trace'], ['file on me', 'file'], ['bundle check', 'bundle'], ['vanity burner', '=vanity st3 -i'], ['checkup', 'checkup'], ['link two wallets', '=link '], ['fingerprint', 'fingerprint'], ['strip a photo', 'strip'], ['scanner', 'scan'], ['help', 'help']];
+const CHIPS = [['trace', 'trace'], ['bundle', 'bundle'], ['file', 'file'], ['vanity', '=vanity st3 -i'], ['checkup', 'checkup'], ['help', 'help']];
 $('#chips').innerHTML = CHIPS.map(([l, c]) => `<button type="button" ${c.startsWith('=') ? `data-fill="${esc(c.slice(1))}"` : `data-run="${esc(c)}"`}>${esc(l)}</button>`).join('');
 
 // views: the rail on the left (a tab bar on phones). the console stays docked under the stage, and can be resized or maximized.
@@ -167,7 +167,7 @@ $('#b-wal').onclick = () => { const s = SG.state(); runFrom(s.active ? 'wallet' 
 // ---------------------------------------------------------------- sound: the room tone from the intro keeps playing, quietly
 const SPK = on => `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 9h3l5-4v14l-5-4H4z"/>${on ? '<path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/>' : '<path d="M16 9l5 6M21 9l-5 6"/>'}</svg>`;
 let soundOn = (() => { try { return localStorage.getItem('st3:mute') !== '1'; } catch { return true; } })(), SND = null;
-async function sound() { if (!SND) { const m = await import('./sound.js?v=6'); SND = m.createSound(); } return SND; }
+async function sound() { if (!SND) { const m = await import('./sound.js?v=7'); SND = m.createSound(); } return SND; }
 async function setSound(on) {
   soundOn = on; try { localStorage.setItem('st3:mute', on ? '0' : '1'); } catch {}
   $('#b-snd').innerHTML = SPK(on); if (window.__st3Sound) window.__st3Sound.setMuted(!on); const s = await sound();
@@ -201,20 +201,15 @@ async function boot({ fromIntro = false } = {}) {
   engineLine();
   const ws = SG.WAL.wallets(); L('wallets in this browser', ws.length ? `<span class="c">${esc(ws.map(w => w.name).join(', '))}</span>` : '<span class="f">none found · a burner works too</span>');
   await sleep(140);
-  const neo = document.createElement('div'); neo.className = 'neo st3neo';
-  neo.innerHTML = `<div class="mkbig">${MASK()}</div><div class="kv"><div class="bigw">st3alth</div>
-    <div><b>you</b><span class="c">nobody</span></div><div><b>trace</b><span class="c">who can see any wallet · funders, exchanges, habits</span></div><div><b>trade</b><span class="c">every solana dex · limit orders · dca</span></div><div><b>burners</b><span class="c">born in this tab, never on a server</span></div><div><b>reads</b><span class="c">through helius, never from your browser</span></div><div><b>keys</b><span class="c">yours alone · st3alth never sees one</span></div></div>`;
-  $('#out').appendChild(neo);
-  const hint = line('<span class="m">put on the mask.</span> <span class="d">type</span> <span class="tok c" data-run="help">help</span><span class="d">, press</span> <span class="c">ctrl k</span><span class="d">, or start with</span> <span class="tok c" data-run="trace">trace</span> <span class="f">·</span> <span class="tok c" data-run="scan">scan</span> <span class="f">·</span> <span class="tok c" data-run="radar">radar</span>');
   if (matchMedia('(pointer: fine)').matches) inp.focus({ preventScroll: true });
   const took = ((performance.now() - t0) / 1000).toFixed(2), bootEls = $$('#out .ln.bt');
-  setTimeout(() => foldBoot(bootEls, hint, `<span class="o">✓</span><span class="m">ready in ${took} s</span><span class="f">·</span><span>${nCk} cookies</span><span class="f">·</span><span>${nTp} third-party requests</span><span class="f">·</span><span>${N && N.helius ? 'reads through helius' : 'public rpc'}</span><span class="tg" data-unfold>log</span>`), 1800);
+  setTimeout(() => foldBoot(bootEls, `<span class="o">✓</span><span class="m">ready</span><span class="f">·</span><span>${nCk} cookies</span><span class="f">·</span><span>${nTp} trackers</span><span class="f">·</span><span>${N && N.helius ? 'helius' : 'public rpc'}</span><span class="tg" data-unfold>log</span>`), 1400);
   const want = new URLSearchParams(location.search).get('do'); if (want && /^[a-z0-9 .$-]{1,60}$/i.test(want)) setTimeout(() => runFrom(want), 300);
 }
 
 // the boot log folds into one line once it has been read, unless something has already been typed under it
-function foldBoot(els, hint, html) {
-  const out = $('#out'); if (!els.length || !hint || out.lastElementChild !== hint) return;
+function foldBoot(els, html) {
+  const out = $('#out'); if (!els.length || out.lastElementChild !== els[els.length - 1]) return;
   const wrap = document.createElement('div'), inner = document.createElement('div'); wrap.className = 'bootlog'; wrap.appendChild(inner);
   els[0].before(wrap); els.forEach(e => inner.appendChild(e));
   const sum = document.createElement('div'); sum.className = 'ln bsum'; sum.innerHTML = html; wrap.before(sum);
@@ -224,7 +219,7 @@ function foldBoot(els, hint, html) {
 // ---------------------------------------------------------------- the intro, then the terminal
 const params = new URLSearchParams(location.search);
 async function playIntro(force) {
-  try { const m = await import('../intro.js?v=6'); window.__st3Sound = m.SOUND; return await new Promise(res => m.runIntro(played => res(played !== false), { force })); }
+  try { const m = await import('../intro.js?v=7'); window.__st3Sound = m.SOUND; return await new Promise(res => m.runIntro(played => res(played !== false), { force })); }
   catch (e) { console.warn(e); return false; }
 }
 (async () => {

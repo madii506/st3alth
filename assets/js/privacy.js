@@ -1,8 +1,8 @@
 // st3alth · privacy: trace (window 2), the funding chain, labels, your mask in the side column, masked mode, panic.
 // Every number comes from the chain through Helius. The score only adds up what a stranger can already see.
-import { $, $$, esc, api, short, ago, line, block, spinner, dots, toast, copy, isAddr, sleep, EXPO } from './core.js?v=6';
-import * as SG from './signer.js?v=6';
-import { def, showTab } from './cmds.js?v=6';
+import { $, $$, esc, api, short, ago, line, block, spinner, dots, toast, copy, isAddr, sleep, EXPO } from './core.js?v=7';
+import * as SG from './signer.js?v=7';
+import { def, showTab } from './cmds.js?v=7';
 
 const GRADE_CLS = { ghost: 'g0', 'low profile': 'g1', traceable: 'g2', exposed: 'g3' };
 const GRADE_COL = { ghost: '#a7d7b6', 'low profile': '#eeebe4', traceable: '#e7c58c', exposed: '#ea9f9f' };

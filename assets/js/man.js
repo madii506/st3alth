@@ -1,6 +1,6 @@
 // st3alth · the manual: window 6. What st3alth does, what it hides and what stays public, the keys, every command, faq.
-import { $, esc } from './core.js?v=6';
-import { CMDS } from './cmds.js?v=6';
+import { $, esc } from './core.js?v=7';
+import { CMDS } from './cmds.js?v=7';
 
 const CARDS = [
   ['trace', 'who can see you', 'paste any wallet. st3alth follows its first SOL back through up to three funders, labels every exchange and protocol on the way, maps who it talks to, and scores how close it is to a name.', 'trace'],

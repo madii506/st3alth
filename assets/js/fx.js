@@ -1,6 +1,6 @@
 // st3alth · motion. masks whose eyes follow your cursor and blink, a crowd of watchers when you go quiet,
 // text that decodes into place, and block titles that resolve as they print. all of it stops for reduced motion.
-import { history } from './core.js?v=6';
+import { history } from './core.js?v=7';
 const RM = matchMedia('(prefers-reduced-motion: reduce)');
 const GL = '░▒▓/\\<>_=+·:01';
 

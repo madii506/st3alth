@@ -1,9 +1,9 @@
 // st3alth · window 7, the checkup: one page that audits a wallet and this browser together, with the fixes in order.
 // and `link`: are two wallets tied together on chain? Both read only public data (through helius) and this tab.
-import { $, esc, line, block, spinner, dots, api, short, isAddr, toast } from './core.js?v=6';
-import { def, showTab } from './cmds.js?v=6';
-import * as SG from './signer.js?v=6';
-import { readPrint } from './tools.js?v=6';
+import { $, esc, line, block, spinner, dots, api, short, isAddr, toast } from './core.js?v=7';
+import { def, showTab } from './cmds.js?v=7';
+import * as SG from './signer.js?v=7';
+import { readPrint } from './tools.js?v=7';
 
 const ringSvg = (v, col, size = 84, w = 7) => { const r = (size - w) / 2, c = 2 * Math.PI * r; return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}"><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="#17171a" stroke-width="${w}"/><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${c * v / 100} ${c}" transform="rotate(-90 ${size / 2} ${size / 2})" class="ck-arc"/></svg>`; };
 const GCOL = { A: '#a7d7b6', B: '#c9dca5', C: '#e7c58c', D: '#e9ad8a', F: '#ea9f9f' };
