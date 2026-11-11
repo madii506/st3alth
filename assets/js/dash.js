@@ -1,9 +1,9 @@
 // st3alth · radar: window 4. Twelve live tiles fed by the same sources the terminal uses (the chain through helius,
 // jupiter, pump.fun through jupiter's feed). Every number is real; when a feed is busy the tile says so.
-import { $, esc, api, usd, price, pct, ago, pic, short, sleep, block } from './core.js?v=4';
-import { spark } from './chart.js?v=4';
-import * as SG from './signer.js?v=4';
-import { def, run } from './cmds.js?v=4';
+import { $, esc, api, usd, price, pct, ago, pic, short, sleep, block } from './core.js?v=5';
+import { spark } from './chart.js?v=5';
+import * as SG from './signer.js?v=5';
+import { def, run } from './cmds.js?v=5';
 
 const SOL = 'So11111111111111111111111111111111111111112';
 const MAJORS = [['SOL', SOL], ['BTC', 'cbbtcf3aa214zXHbiAZQwf4122FBYbraNdFqgw4iMij'], ['ETH', '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs'], ['JUP', 'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN'],
@@ -71,7 +71,7 @@ async function pumpTiles(q) {
   for (let m = from; m <= m0; m++) mins.push([m, 0]);
   for (const c of BORN.values()) { const m = Math.floor(c / 60000); const b = mins.find(x => x[0] === m); if (b) b[1]++; }
   const mx = Math.max(1, ...mins.map(x => x[1]));
-  sonarFeed(j.fresh); void mx;
+  sonarFeed(j.fresh, j.grad); void mx;
   const done = mins.slice(0, -1), avg = done.length ? done.reduce((a, x) => a + x[1], 0) / done.length : 0;
   q('rateh').innerHTML = done.length ? `${BORN.size} coins seen being born · about <span class="c">${Math.round(avg)}</span> a minute · busiest minute <span class="c">${Math.max(...done.map(x => x[1]))}</span>` : `${BORN.size} coins seen so far · the first full minute is still filling`;
 }
@@ -114,9 +114,10 @@ function prvTile(q) {
 const SON = { pts: new Map(), raf: 0, cv: null, ctx: null, tip: null, w: 0, h: 0, hover: null, last: 0 }, SPAN = 30 * 60000, SWEEP = 4200;
 const RAD = age => Math.log(1 + Math.max(0, age) / 5000) / Math.log(1 + SPAN / 5000);   // log time: the last minute gets as much room as the half hour before it
 const angOf = m => { let h = 2166136261; for (let i = 0; i < m.length; i++) { h ^= m.charCodeAt(i); h = Math.imul(h, 16777619); } return ((h >>> 0) / 4294967296) * Math.PI * 2; };
-function sonarFeed(fresh) {
+function sonarFeed(fresh, grad = []) {
   const now = Date.now();
   for (const t of fresh) { const c = new Date(t.created).getTime(); if (!Number.isFinite(c) || SON.pts.has(t.mint)) continue; SON.pts.set(t.mint, { m: t.mint, c: Math.min(c, now), sym: t.sym || '', a: angOf(t.mint) }); }
+  for (const t of grad) { const c = new Date(t.gradAt || 0).getTime(), k = 'g:' + t.mint; if (!Number.isFinite(c) || !c || SON.pts.has(k)) continue; SON.pts.set(k, { m: t.mint, c: Math.min(c, now), sym: t.sym || '', a: angOf(t.mint), g: true }); }
   for (const [k, p] of SON.pts) if (now - p.c > SPAN) SON.pts.delete(k);
 }
 function sonarWire(box) {
@@ -124,7 +125,7 @@ function sonarWire(box) {
   const size = () => { const r = SON.cv.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); SON.w = r.width; SON.h = r.height; SON.cv.width = Math.max(1, Math.round(r.width * d)); SON.cv.height = Math.max(1, Math.round(r.height * d)); SON.ctx.setTransform(d, 0, 0, d, 0, 0); };
   size(); new ResizeObserver(size).observe(SON.cv);
   const pick = e => { const r = SON.cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top; let best = null, bd = 11; for (const p of SON.pts.values()) { if (p.x == null) continue; const d = Math.hypot(p.x - mx, p.y - my); if (d < bd) { bd = d; best = p; } } return [best, mx, my]; };
-  SON.cv.addEventListener('pointermove', e => { const [p, mx, my] = pick(e); SON.hover = p; SON.cv.style.cursor = p ? 'pointer' : 'crosshair'; if (!p) { SON.tip.classList.remove('on'); return; } SON.tip.innerHTML = `<b>${esc(p.sym)}</b> · ${ago(p.c)} old<br><span class="f">click for the report</span>`; SON.tip.style.left = Math.max(4, Math.min(mx + 12, SON.w - 150)) + 'px'; SON.tip.style.top = Math.max(4, my - 34) + 'px'; SON.tip.classList.add('on'); });
+  SON.cv.addEventListener('pointermove', e => { const [p, mx, my] = pick(e); SON.hover = p; SON.cv.style.cursor = p ? 'pointer' : 'crosshair'; if (!p) { SON.tip.classList.remove('on'); return; } SON.tip.innerHTML = `<b>${esc(p.sym)}</b> · ${p.g ? 'graduated ' + ago(p.c) + ' ago' : ago(p.c) + ' old'}<br><span class="f">click for the report</span>`; SON.tip.style.left = Math.max(4, Math.min(mx + 12, SON.w - 150)) + 'px'; SON.tip.style.top = Math.max(4, my - 34) + 'px'; SON.tip.classList.add('on'); });
   SON.cv.addEventListener('pointerleave', () => { SON.hover = null; SON.tip.classList.remove('on'); });
   SON.cv.addEventListener('click', e => { const [p] = pick(e); if (p) run(`token ${p.m}`); });
 }
@@ -146,8 +147,10 @@ function sonarDraw() {
     const age = Math.max(0, t - p.c), r = 4 + (R - 8) * Math.min(1, RAD(age)); p.x = cx + Math.cos(p.a) * r; p.y = cy + Math.sin(p.a) * r;
     const d = ((sw - p.a) % TAU + TAU) % TAU, b = d < .06 ? 1 : Math.max(.2, 1 - d / (TAU * .85)), hot = d < .4, hov = SON.hover === p;
     if (age < 20000) { const q = age / 20000; c.strokeStyle = `rgba(217,160,102,${(1 - q) * .75})`; c.beginPath(); c.arc(p.x, p.y, 3 + q * 16, 0, TAU); c.stroke(); }
-    c.globalAlpha = b; c.fillStyle = hot || age < 20000 ? '#d9a066' : '#eeebe4'; c.fillRect(p.x - (hov ? 2.5 : 1.6), p.y - (hov ? 2.5 : 1.6), hov ? 5 : 3.2, hov ? 5 : 3.2);
-    if ((i < 3 && age < 180000) || hov) { c.globalAlpha = Math.min(1, b + .2); c.fillStyle = '#c7c3bb'; c.textAlign = 'left'; c.fillText(String(p.sym).slice(0, 10), p.x + 6, p.y - 4); c.textAlign = 'center'; }
+    c.globalAlpha = b;
+    if (p.g) { const z = hov ? 6 : 4.5; c.strokeStyle = '#d9a066'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(p.x, p.y - z); c.lineTo(p.x + z, p.y); c.lineTo(p.x, p.y + z); c.lineTo(p.x - z, p.y); c.closePath(); c.stroke(); c.fillStyle = '#d9a066'; c.fillRect(p.x - 1, p.y - 1, 2, 2); }
+    else { c.fillStyle = hot || age < 20000 ? '#d9a066' : '#eeebe4'; c.fillRect(p.x - (hov ? 2.5 : 1.6), p.y - (hov ? 2.5 : 1.6), hov ? 5 : 3.2, hov ? 5 : 3.2); }
+    if ((i < 3 && age < 180000) || hov || (p.g && age < 600000)) { c.globalAlpha = Math.min(1, b + .2); c.fillStyle = '#c7c3bb'; c.textAlign = 'left'; c.fillText(String(p.sym).slice(0, 10), p.x + 6, p.y - 4); c.textAlign = 'center'; }
     c.globalAlpha = 1;
   });
   c.fillStyle = '#eeebe4'; c.beginPath(); c.arc(cx, cy, 2, 0, TAU); c.fill();

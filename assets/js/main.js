@@ -1,17 +1,17 @@
 // st3alth · the terminal: the intro hand-off, the boot, the prompt (history, ghost completion, token search), windows
 // (alt+0..7), the palette (ctrl k), masked mode, sound. One prompt drives every window.
-import { $, $$, esc, sleep, line, initOut, api, pushHist, history, clear, toast, SEEN, dots, follow, imgErr, psHtml, copy, CA } from './core.js?v=4';
-import { CMDS, ALIAS, setRunner, showTab, chartHover, chartRedraw } from './cmds.js?v=4';
-import { startPanes, setPaneRunner, engineLine } from './panes.js?v=4';
-import * as SG from './signer.js?v=4';
-import { counted, setExtraRunner, aliasOf, stopTop, cwd } from './extra.js?v=4';
-import { radar } from './dash.js?v=4';
-import { runTrace, setMasked } from './privacy.js?v=4';
+import { $, $$, esc, sleep, line, initOut, api, pushHist, history, clear, toast, SEEN, dots, follow, imgErr, psHtml, copy, CA } from './core.js?v=5';
+import { CMDS, ALIAS, setRunner, showTab, chartHover, chartRedraw } from './cmds.js?v=5';
+import { startPanes, setPaneRunner, engineLine } from './panes.js?v=5';
+import * as SG from './signer.js?v=5';
+import { counted, setExtraRunner, aliasOf, stopTop, cwd } from './extra.js?v=5';
+import { radar } from './dash.js?v=5';
+import { runTrace, setMasked } from './privacy.js?v=5';
 import './tools.js';
 import './check.js';
 import './fx.js';
 import './deep.js';
-import { manual } from './man.js?v=4';
+import { manual } from './man.js?v=5';
 
 const dirOf = () => { const d = cwd(); return d === '/home/anon' ? '~' : d.replace('/home/anon', '~'); };
 const P = () => `<span class="p">${psHtml(dirOf())}</span>`;
@@ -37,7 +37,7 @@ export async function run(cmd, { echo = true } = {}) {
   finally { busy--; if (!busy) document.body.classList.remove('busy'); meta(); }
 }
 // commands that open their own window stay there; everything else prints in the shell
-const STAY = new Set(['checkup', 'audit', 'check', 'trace', 'tr', 'expose', 'scan', 'chart', 'c', 'radar', 'dash', 'dashboard', 'mission', 'orders', 'docs', 'man', 'manual', 'intro', 'panic', 'hide']);
+const STAY = new Set(['checkup', 'audit', 'check', 'trace', 'tr', 'expose', 'scan', 'chart', 'c', 'radar', 'dash', 'dashboard', 'mission', 'orders', 'docs', 'man', 'manual', 'intro', 'panic', 'hide', 'bundle', 'bubble', 'bundles', 'clusters', 'insiders', 'file', 'dossier', 'case', 'profile']);
 const runFrom = c => { const w = String(c).trim().split(/\s+/)[0].toLowerCase(); if (!STAY.has(w)) showTab('out'); return run(c); };
 setRunner(runFrom); setPaneRunner(runFrom); setExtraRunner(runFrom);
 addEventListener('st3:open', e => showTab(e.detail));
@@ -103,7 +103,7 @@ inp.addEventListener('keydown', e => {
   else if (e.key === 'l' && e.ctrlKey) { e.preventDefault(); clear(); }
 });
 // keys: ctrl k palette, alt+digit windows, / to the prompt, esc closes the palette
-const TABS = ['out', 'radar', 'pulse', 'trace', 'chart', 'orders', 'check', 'watch', 'man'];
+const TABS = ['out', 'pulse', 'radar', 'trace', 'chart', 'orders', 'check', 'watch', 'man'];
 addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openPal(); }
   else if (e.key === 'Escape' && !$('#pal').hidden) closePal();
@@ -145,7 +145,7 @@ $('#chart').addEventListener('mousemove', chartHover); $('#chart').addEventListe
 
 // ---------------------------------------------------------------- the palette (ctrl k): commands and windows
 let palSel = 0, palList = [];
-const WIN_ITEMS = [['console', 'out', 'alt 0 · the prompt and everything it prints'], ['radar', 'radar', 'view 1 · mission control: solana, pump.fun, majors, movers, stocks'], ['scan', 'pulse', 'view 2 · every pump.fun coin as it is born'], ['trace', 'trace', 'view 3 · who can see a wallet'], ['chart', 'chart', 'view 4 · candles and live trades'], ['orders', 'orders', 'view 5 · your limit orders and dca plans'], ['check', 'check', 'view 6 · a full privacy checkup'], ['watch', 'watch', 'view 7 · births, trending, stocks, your mask and wallet'], ['manual', 'man', 'view 8 · how everything works'], ['bundle', 'bundle', 'who funded the top holders of a coin'], ['file', 'file', 'the case file on a wallet']];
+const WIN_ITEMS = [['console', 'out', 'alt 0 · the prompt and everything it prints'], ['scan', 'pulse', 'view 1 · every pump.fun coin as it is born'], ['radar', 'radar', 'view 2 · mission control: solana, pump.fun, majors, movers, stocks'], ['trace', 'trace', 'view 3 · who can see a wallet'], ['chart', 'chart', 'view 4 · candles and live trades'], ['orders', 'orders', 'view 5 · your limit orders and dca plans'], ['check', 'check', 'view 6 · a full privacy checkup'], ['watch', 'watch', 'view 7 · births, trending, stocks, your mask and wallet'], ['manual', 'man', 'view 8 · how everything works'], ['bundle', 'bundle', 'who funded the top holders of a coin'], ['file', 'file', 'the case file on a wallet']];
 function openPal() { const p = $('#pal'); p.hidden = false; $('#pal-in').value = ''; paintPal(); setTimeout(() => $('#pal-in').focus(), 10); }
 function closePal() { $('#pal').hidden = true; inp.focus({ preventScroll: true }); }
 function paintPal() {
@@ -167,7 +167,7 @@ $('#b-wal').onclick = () => { const s = SG.state(); runFrom(s.active ? 'wallet' 
 // ---------------------------------------------------------------- sound: the room tone from the intro keeps playing, quietly
 const SPK = on => `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 9h3l5-4v14l-5-4H4z"/>${on ? '<path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/>' : '<path d="M16 9l5 6M21 9l-5 6"/>'}</svg>`;
 let soundOn = (() => { try { return localStorage.getItem('st3:mute') !== '1'; } catch { return true; } })(), SND = null;
-async function sound() { if (!SND) { const m = await import('./sound.js?v=4'); SND = m.createSound(); } return SND; }
+async function sound() { if (!SND) { const m = await import('./sound.js?v=5'); SND = m.createSound(); } return SND; }
 async function setSound(on) {
   soundOn = on; try { localStorage.setItem('st3:mute', on ? '0' : '1'); } catch {}
   $('#b-snd').innerHTML = SPK(on); if (window.__st3Sound) window.__st3Sound.setMuted(!on); const s = await sound();
@@ -182,7 +182,7 @@ async function boot({ fromIntro = false } = {}) {
   // straight out of the intro the screen just comes up (you already opened your eyes); otherwise it opens like an eye
   const app = $('#app'); app.classList.remove('boot'); void app.offsetWidth; app.classList.add(fromIntro ? 'lit' : 'on');
   initOut(); window.__st3Sess = SESS; startPanes();
-  if (innerWidth > 980) showTab('radar'); else showTab('out');
+  showTab('pulse');   // home is the scanner
   if (CA) { const m = $('#hud-m'); m.insertAdjacentHTML('afterbegin', `<button type="button" class="ca" data-copy="${CA}" title="copy the contract address"><i>CA</i><code>${CA}</code><u>copy</u></button>`); }
   const t0 = performance.now(), ts = () => `<span class="f">[${((performance.now() - t0) / 1000).toFixed(3).padStart(7)}]</span>`;
   const L = (k, v) => line(`${ts()} ${dots(k, v, 26)}`, 'bt');
@@ -224,7 +224,7 @@ function foldBoot(els, hint, html) {
 // ---------------------------------------------------------------- the intro, then the terminal
 const params = new URLSearchParams(location.search);
 async function playIntro(force) {
-  try { const m = await import('../intro.js?v=4'); window.__st3Sound = m.SOUND; return await new Promise(res => m.runIntro(played => res(played !== false), { force })); }
+  try { const m = await import('../intro.js?v=5'); window.__st3Sound = m.SOUND; return await new Promise(res => m.runIntro(played => res(played !== false), { force })); }
   catch (e) { console.warn(e); return false; }
 }
 (async () => {

@@ -1,12 +1,11 @@
 // st3alth · the manual: window 6. What st3alth does, what it hides and what stays public, the keys, every command, faq.
-import { $, esc } from './core.js?v=4';
-import { CMDS } from './cmds.js?v=4';
+import { $, esc } from './core.js?v=5';
+import { CMDS } from './cmds.js?v=5';
 
 const CARDS = [
   ['trace', 'who can see you', 'paste any wallet. st3alth follows its first SOL back through up to three funders, labels every exchange and protocol on the way, maps who it talks to, and scores how close it is to a name.', 'trace'],
   ['burners', 'a wallet for one job', 'a fresh keypair born in this tab. trade from it, then sweep and forget it. the key never touches a server, and your main wallet never shows up in the trade.', 'burner new'],
   ['private reads', 'your ip stays home', 'every chain read goes through st3alth to helius. no public rpc ever sees your ip next to your wallet, and nothing in your browser talks to anyone else.', 'privacy'],
-  ['masked', 'a screen that keeps quiet', 'your own balances and addresses blur until you hover them. shift+esc hides everything at once, for streams and screenshots.', 'mask'],
   ['trade', 'every dex, one line', 'swaps routed by jupiter across every solana dex, limit orders, dca, tokenized stocks. you see the exact route and fees before your wallet signs.', 'swap 0.1 sol usdc'],
   ['scan', 'every coin as it is born', 'pump.fun births, the final stretch and graduations, live, with the numbers trenchers check first: top holders, dev history, bots, bundles.', 'scan'],
   ['checkup', 'one page, every leak', 'exposure, threats, approvals, your browser fingerprint, this tab and your signer, audited together, graded, with the fixes in order.', 'checkup'],
@@ -21,7 +20,7 @@ const CARDS = [
   ['sonar', 'every birth on one screen', 'the radar sweeps pump.fun: each new coin lands as a blip and drifts outward as it ages. hover one to see it, click it for the full report.', 'radar'],
   ['strip', 'what your photos give away', 'drop a photo anywhere: see its gps, phone, serial and time, then save a clean copy, checked by reading it back. it never leaves your tab.', 'strip'],
 ];
-const KEYS = [['ctrl k', 'the palette: every command and window'], ['alt 0 … 7', 'switch window'], ['tab / →', 'take the suggestion'], ['↑ ↓', 'history'], ['ctrl l', 'clear the shell'], ['/', 'back to the prompt'], ['shift esc', 'panic: hide the screen'], ['esc', 'skip the intro, close the palette']];
+const KEYS = [['ctrl k', 'the palette: every command and window'], ['alt 0 … 8', 'switch window'], ['tab / →', 'take the suggestion'], ['↑ ↓', 'history'], ['ctrl l', 'clear the shell'], ['/', 'back to the prompt'], ['shift esc', 'panic: hide the screen'], ['esc', 'skip the intro, close the palette']];
 const FAQ = [
   ['is st3alth a mixer?', 'no. st3alth never holds or pools anyone\'s funds. it shows you what is already public, gives you burners that live in your own tab, and keeps your browser from talking to anyone but itself.'],
   ['can trace see my private keys or my history if i trace myself?', 'no. trace reads only what is public on the chain, through helius, the same way anyone could. your keys never leave your wallet or your tab.'],

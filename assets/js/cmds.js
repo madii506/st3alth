@@ -1,9 +1,9 @@
 // st3alth · every command. Each one is real: quotes, transactions and data come from the chain (through Helius), Jupiter
 // and pump.fun; the wallet (or a burner born in this tab) signs. Nothing here is a demo.
-import { $, $$, api, esc, short, ago, usd, price, pct, amt, img, line, block, spinner, dots, sleep, clear, copy, toast, isAddr, unb64, b64, history, forgetHist, seen, SEEN, pic, CA, EXPO } from './core.js?v=4';
-import * as SG from './signer.js?v=4';
-import { drawChart, spark } from './chart.js?v=4';
-import { startPulse, stopPulse, setPulseRunner } from './pulse.js?v=4';
+import { $, $$, api, esc, short, ago, usd, price, pct, amt, img, line, block, spinner, dots, sleep, clear, copy, toast, isAddr, unb64, b64, history, forgetHist, seen, SEEN, pic, CA, EXPO } from './core.js?v=5';
+import * as SG from './signer.js?v=5';
+import { drawChart, spark } from './chart.js?v=5';
+import { startPulse, stopPulse, setPulseRunner } from './pulse.js?v=5';
 
 export const CMDS = {}, ALIAS = {};
 export const def = (name, cat, usage, help, run, alias = []) => { CMDS[name] = { name, cat, usage, help, run }; alias.forEach(a => { ALIAS[a] = name; }); };
@@ -348,7 +348,6 @@ const RINGS = [
   ['your ip', 'every chain read goes through st3alth to helius, so no public rpc ever sees your ip or your wallet together.', 'your ip, to st3alth, like any website'],
   ['your browser', 'no analytics and no third-party scripts. the security policy lets this page talk to itself only.', 'nothing beyond this site'],
   ['your main wallet', 'trade from a burner born in this tab, so your main wallet never appears in the trade.', 'the burner, and how you funded it'],
-  ['your screen', 'masked mode blurs your own balances and addresses until you hover, for streams and screenshots.', 'nothing, it is only your screen'],
   ['your trail', 'trace shows what a stranger can already link to your wallet: funders, exchanges, habits.', 'the chain was always public; st3alth only shows you'],
   ['your balances', 'helius privacy rings encrypt balances and amounts. st3alth points you there.', 'who sent to whom, and what leaves a ring'],
 ];

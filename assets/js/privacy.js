@@ -1,8 +1,8 @@
 // st3alth · privacy: trace (window 2), the funding chain, labels, your mask in the side column, masked mode, panic.
 // Every number comes from the chain through Helius. The score only adds up what a stranger can already see.
-import { $, $$, esc, api, short, ago, line, block, spinner, dots, toast, copy, isAddr, sleep, EXPO } from './core.js?v=4';
-import * as SG from './signer.js?v=4';
-import { def, showTab } from './cmds.js?v=4';
+import { $, $$, esc, api, short, ago, line, block, spinner, dots, toast, copy, isAddr, sleep, EXPO } from './core.js?v=5';
+import * as SG from './signer.js?v=5';
+import { def, showTab } from './cmds.js?v=5';
 
 const GRADE_CLS = { ghost: 'g0', 'low profile': 'g1', traceable: 'g2', exposed: 'g3' };
 const GRADE_COL = { ghost: '#a7d7b6', 'low profile': '#eeebe4', traceable: '#e7c58c', exposed: '#ea9f9f' };
@@ -200,7 +200,7 @@ export function setMasked(on) {
   const b = $('#b-mask'); if (b) { b.classList.toggle('on', on); b.querySelector('span').textContent = on ? 'masked' : 'unmasked'; }
   const m = $('#st-mode'); if (m && !m.classList.contains('sig')) { m.textContent = on ? 'MASKED' : 'UNMASKED'; m.classList.toggle('exp', !on); }
 }
-try { setMasked(localStorage.getItem('st3:masked') !== '0'); } catch { setMasked(true); }
+try { setMasked(localStorage.getItem('st3:masked') === '1'); } catch { setMasked(false); }
 $('#b-mask') && $('#b-mask').addEventListener('click', () => setMasked(!document.body.classList.contains('masked')));
 let cover = null;
 function panic() {
@@ -250,7 +250,7 @@ const OPSEC = [
   ['no standing permissions', 'a token approval lets someone move your tokens later, without asking. check with approvals, revoke what you do not use.'],
   ['clean photos', 'a photo can carry gps, the phone model and its serial. strip it before you post it.'],
   ['burners are for burning', 'sweep what is left and forget the key. st3alth keeps burners in this tab only.'],
-  ['screens leak too', 'keep masked mode on while streaming. shift+esc hides everything at once.'],
+  ['screens leak too', 'streaming or sharing a screen? shift+esc hides everything at once.'],
 ];
 def('opsec', 'privacy', 'opsec', 'seven habits that keep a wallet hard to place', () => {
   line('<span class="h">opsec</span> <span class="m">· what keeps a wallet hard to put a name to</span>');

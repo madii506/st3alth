@@ -1,7 +1,7 @@
 // st3alth · the live side: new coins, trending, stocks, the wallet pane, the top bar and the status line.
-import { $, $$, api, esc, short, ago, usd, price, pct, amt, img, seen, pic, imgSet } from './core.js?v=4';
-import * as SG from './signer.js?v=4';
-import { watchlist } from './cmds.js?v=4';
+import { $, $$, api, esc, short, ago, usd, price, pct, amt, img, seen, pic, imgSet } from './core.js?v=5';
+import * as SG from './signer.js?v=5';
+import { watchlist } from './cmds.js?v=5';
 let RUN = () => {}; export const setPaneRunner = f => { RUN = f; };
 const vis = () => !document.hidden;
 const prev = new Map();
@@ -78,7 +78,7 @@ export function startPanes() {
     const b = $('#b-wal'); b.classList.toggle('on', !!s.active);
     b.innerHTML = `<span class="${s.active ? 'sens' : ''}">${s.active ? (s.use === 'burner' && s.burner ? `burner · ${short(s.burner.address)}` : `${short(s.active)}`) : 'connect'}</span>`;
     $('#signer b').textContent = s.active ? (s.use === 'burner' && s.burner ? 'burner ' + short(s.burner.address) : 'wallet ' + short(s.active)) : 'none'; $('#signer b').classList.toggle('sens', !!s.active); $('#p-wal .pl').classList.toggle('sens', !!s.active); $('#p-wal-k').classList.toggle('sens', !!s.active);
-    const m = $('#st-mode'); if (s.active) { m.textContent = s.use === 'burner' && s.burner ? 'BURNER' : 'SIGNED'; m.classList.add('sig'); m.classList.remove('exp'); } else { m.classList.remove('sig'); const on = document.body.classList.contains('masked'); m.textContent = on ? 'MASKED' : 'UNMASKED'; m.classList.toggle('exp', !on); }
+    const m = $('#st-mode'); if (!m) {} else if (s.active) { m.textContent = s.use === 'burner' && s.burner ? 'BURNER' : 'SIGNED'; m.classList.add('sig'); m.classList.remove('exp'); } else { m.classList.remove('sig'); const on = document.body.classList.contains('masked'); m.textContent = on ? 'MASKED' : 'UNMASKED'; m.classList.toggle('exp', !on); }
     walletPane();
   });
   setInterval(() => { $('#b-clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);

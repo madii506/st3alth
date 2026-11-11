@@ -1,9 +1,9 @@
 // st3alth · window 7, the checkup: one page that audits a wallet and this browser together, with the fixes in order.
 // and `link`: are two wallets tied together on chain? Both read only public data (through helius) and this tab.
-import { $, esc, line, block, spinner, dots, api, short, isAddr, toast } from './core.js?v=4';
-import { def, showTab } from './cmds.js?v=4';
-import * as SG from './signer.js?v=4';
-import { readPrint } from './tools.js?v=4';
+import { $, esc, line, block, spinner, dots, api, short, isAddr, toast } from './core.js?v=5';
+import { def, showTab } from './cmds.js?v=5';
+import * as SG from './signer.js?v=5';
+import { readPrint } from './tools.js?v=5';
 
 const ringSvg = (v, col, size = 84, w = 7) => { const r = (size - w) / 2, c = 2 * Math.PI * r; return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}"><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="#17171a" stroke-width="${w}"/><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${c * v / 100} ${c}" transform="rotate(-90 ${size / 2} ${size / 2})" class="ck-arc"/></svg>`; };
 const GCOL = { A: '#a7d7b6', B: '#c9dca5', C: '#e7c58c', D: '#e9ad8a', F: '#ea9f9f' };
@@ -91,8 +91,7 @@ async function checkup(addr) {
   if (P) { const dnt = P.rows.find(r => r[0] === 'do not track'); cards.push(['browser', `<b class="ck-big">${P.id.slice(0, 8).replace(/(.{4})(?=.)/g, '$1·')}</b><p class="d">${P.rows.length} signals any site reads without asking${dnt && /on/.test(dnt[1]) ? ' · do-not-track is on, which is itself a clue' : ''}</p>`, '<span class="tok c" data-run="fingerprint">fingerprint</span>', 'mid']); fixes.push(['every site can fingerprint this browser. use one that randomizes canvas and audio for anything that matters.', 'fingerprint']); }
   // 5 this session
   if (ck || tp) score -= 10;
-  cards.push(['this tab', `<b class="ck-big ${ck || tp ? 'w' : 'g'}">${ck} cookies · ${tp} third-party</b><p class="d">${masked ? 'masked: your own numbers blur on screen' : 'not masked: your numbers show on screen'}</p>`, `<span class="tok c" data-run="${masked ? 'privacy' : 'mask'}">${masked ? 'what it talks to' : 'mask it'}</span>`, ck || tp ? 'mid' : 'ok']);
-  if (!masked) { score -= 3; fixes.push(['masked mode is off. turn it on before you share your screen.', 'mask']); }
+  cards.push(['this tab', `<b class="ck-big ${ck || tp ? 'w' : 'g'}">${ck} cookies · ${tp} third-party</b><p class="d">${ck || tp ? 'something here talks to someone else' : 'this tab talks to st3alth and nobody else'}</p>`, `<span class="tok c" data-run="privacy">what it talks to</span>`, ck || tp ? 'mid' : 'ok']);
   // 6 signer
   const kind = s.active ? SG.activeKind() : null;
   if (who && who === s.active && kind !== 'burner') { score -= 5; fixes.push(['you are signing with your main wallet. a burner keeps trades off it.', 'burner new']); }

@@ -1,7 +1,7 @@
 // st3alth · who signs: your wallet (Wallet Standard, by hand) or a burner born in this tab.
 // A burner's secret never leaves the page; it is gone when the tab closes unless you save the key file.
-import * as WAL from './wallet98.js?v=4';
-import { b58, unb64, b64, unb58 } from './core.js?v=4';
+import * as WAL from './wallet98.js?v=5';
+import { b58, unb64, b64, unb58 } from './core.js?v=5';
 export { WAL };
 let BURN = null, USE = 'wallet';
 const subs = new Set(); const fire = () => subs.forEach(f => { try { f(state()); } catch {} });

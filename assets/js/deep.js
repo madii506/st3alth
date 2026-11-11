@@ -2,10 +2,10 @@
 //   bundle  the 20 biggest holders of a coin and who funded each: wallets secretly run by one hand light up as clusters
 //   file    the case file a stranger can build on any wallet in a second: names, funders, circle, holdings, sleep, a stamp
 //   vanity  a burner whose address starts (or ends) with your letters, ground out in this tab and never sent anywhere
-import { $, esc, api, short, ago, isAddr, line, block, spinner, dots, toast, b58, usd, sleep } from './core.js?v=4';
-import { def, showTab, run } from './cmds.js?v=4';
-import * as SG from './signer.js?v=4';
-import { decode } from './fx.js?v=4';
+import { $, esc, api, short, ago, isAddr, line, block, spinner, dots, toast, b58, usd, sleep } from './core.js?v=5';
+import { def, showTab, run } from './cmds.js?v=5';
+import * as SG from './signer.js?v=5';
+import { decode } from './fx.js?v=5';
 
 const RM = matchMedia('(prefers-reduced-motion: reduce)');
 const CL = ['#d9a066', '#ea9f9f', '#e7c58c', '#9fc1d6', '#c3a9da', '#a7d7b6', '#d6b49f', '#b9c79a'];
@@ -40,6 +40,11 @@ function bdBuild(d, tok) {
     edges.push({ a: fn, b: hn, kind: f.busy ? 'busy' : 'fund', cl: f.busy ? -1 : h.cluster });
   });
   d.links.forEach(([a, b]) => { const A = by.get(a), B = by.get(b); if (A && B) edges.push({ a: A, b: B, kind: 'direct', cl: A.cl }); });
+  if (d.dev) {   // the wallet that created the coin: marked wherever it sits, and tied to every holder it funded
+    let dn = by.get(d.dev.addr);
+    if (!dn && d.dev.funded.length) { const h0 = by.get(d.dev.funded[0]); dn = add({ id: d.dev.addr, kind: 'funder', cl: h0 ? h0.cl : -1, r: 6, x: (h0 ? h0.x : 0) * 1.5, y: (h0 ? h0.y : 0) * 1.5, vx: 0, vy: 0, at: (h0 ? h0.at : 300) + 140, n: d.dev.funded.length }); d.dev.funded.forEach(o => { const h = by.get(o); if (h && !edges.some(e => e.a === dn && e.b === h)) edges.push({ a: dn, b: h, kind: 'fund', cl: h.cl }); }); }
+    if (dn) dn.dev = true;
+  }
   nodes.filter(n => n.kind === 'holder' || n.kind === 'pool').forEach(n => edges.push({ a: coin, b: n, kind: 'own', cl: -1 }));
   BD.nodes = nodes; BD.edges = edges; BD.alpha = 1; BD.t0 = performance.now(); BD.cam = { x: 0, y: 0, s: 1 };
 }
@@ -88,6 +93,7 @@ function bdDraw(now) {
     else if (n.kind === 'coin') { c.fillStyle = '#eeebe4'; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill(); c.fillStyle = '#050505'; c.font = `700 ${Math.max(9, 10 * S)}px JB, monospace`; c.fillText(String(n.label).slice(0, 6).toUpperCase(), x, y + .5); }
     else { c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill(); if (n.h && n.h.fresh) { c.fillStyle = '#050505'; c.beginPath(); c.arc(x, y, Math.max(1.4, r * .32), 0, Math.PI * 2); c.fill(); } }
     if (hov) { c.strokeStyle = '#eeebe4'; c.lineWidth = 1; c.beginPath(); c.arc(x, y, r + 5, 0, Math.PI * 2); c.stroke(); }
+    if (n.dev) { const q = .5 + .5 * Math.sin(now / 260); c.strokeStyle = '#ea9f9f'; c.lineWidth = 1.4; c.globalAlpha = Math.min(1, k * 1.4) * (.55 + .45 * q); c.beginPath(); c.arc(x, y, r + 6 + q * 2, 0, Math.PI * 2); c.stroke(); c.globalAlpha = Math.min(1, k * 1.4); c.fillStyle = '#ea9f9f'; c.font = '700 9px JB, monospace'; c.fillText('DEV', x, y - r - 12); }
     // a cluster member pings once when it lands
     if (n.cl >= 0 && n.kind === 'holder' && t - n.at < 1300 && t > n.at) { const q = (t - n.at) / 1300; c.strokeStyle = col; c.globalAlpha = (1 - q) * .7; c.lineWidth = 1; c.beginPath(); c.arc(x, y, r + q * 22, 0, Math.PI * 2); c.stroke(); }
     c.globalAlpha = 1;
@@ -110,7 +116,8 @@ function bdWire() {
     if (n.kind === 'coin') h = `<b>${esc(BD.tok.sym)}</b><br><span class="f">${esc(short(BD.tok.mint))}</span>`;
     else if (n.kind === 'pool') h = `<b>pool or curve</b> · ${pc(n.h.pct)}<br><span class="f">a program account, not a person</span>`;
     else if (n.kind === 'holder') { const H = n.h, f = H.funder; h = `<b>#${n.i + 1} · ${pc(H.pct)}</b>${H.cluster >= 0 ? ` · <span style="color:${CL[H.cluster % CL.length]}">cluster ${H.cluster + 1}</span>` : ''}<br>${esc(short(H.owner))}<br><span class="f">${f ? `funded by ${esc(f.label || short(f.addr))}${f.busy ? ' (exchange or bot)' : ''} · ${f.t ? ago(f.t * 1000) + ' ago' : ''}` : H.more ? 'old wallet: funder out of reach' : 'no funder seen'}${H.fresh ? ' · born under 3 days ago' : ''}</span>`; }
-    else h = `<b>${n.kind === 'busy' ? 'busy wallet' : 'funder'}</b> · behind ${n.n} holder${n.n === 1 ? '' : 's'}<br>${esc(n.label || short(n.id))}<br><span class="f">${n.kind === 'busy' ? 'an exchange, a bot or a router: proves nothing' : 'one hand, many wallets'}</span>`;
+    else h = `<b>${n.dev ? 'the dev' : n.kind === 'busy' ? 'busy wallet' : 'funder'}</b> · behind ${n.n} holder${n.n === 1 ? '' : 's'}<br>${esc(n.label || short(n.id))}<br><span class="f">${n.dev ? 'it made the coin, and funded these wallets' : n.kind === 'busy' ? 'an exchange, a bot or a router: proves nothing' : 'one hand, many wallets'}</span>`;
+    if (n.kind === 'holder' && n.dev) h = h.replace('</b>', '</b> · <span style="color:#ea9f9f">the dev</span>');
     tip.innerHTML = h + (n.kind !== 'coin' ? '<br><span class="f">click to trace</span>' : ''); tip.style.left = Math.min(mx + 14, BD.w - 230) + 'px'; tip.style.top = Math.max(8, my - 10) + 'px'; tip.classList.add('on');
   });
   BD.cv.addEventListener('pointerleave', () => { BD.hover = null; tip.classList.remove('on'); });
@@ -119,17 +126,19 @@ function bdWire() {
 }
 function bdReport(d, tok) {
   const s = d.stats, col = GRADE[d.grade] || '#eeebe4';
-  const cl = d.clusters.slice(0, 8).map((c, i) => `<div class="bd-cl" style="--c:${CL[i % CL.length]}"><i></i><div><b>cluster ${i + 1} · ${c.members.length} wallets · ${pc(c.pct)}</b><p>${c.funders.length ? `funded by ${c.funders.slice(0, 2).map(f => `<span class="tok" data-run="trace ${esc(f)}">${esc(short(f))}</span>`).join(', ')}` : 'tied by direct transfers'}${c.spread != null ? ` · ${c.spread < 1 ? 'in the same second' : 'within ' + dur(c.spread)}` : ''}${c.direct && c.funders.length ? ' · and they pay each other' : ''}</p><div class="bd-mem">${c.members.slice(0, 8).map(m => `<span class="tok" data-run="trace ${esc(m)}">${esc(short(m))}</span>`).join('')}</div></div></div>`).join('');
+  const dv = d.dev, devHtml = dv ? `<div class="bd-dev"><span class="bd-dk">dev</span><div><span class="tok" data-run="trace ${esc(dv.addr)}">${esc(short(dv.addr))}</span> · ${dv.holder ? `holds <b>${pc(dv.pct)}</b>` : 'not in the top 20'}${dv.funded.length ? ` · funded <b>${dv.funded.length}</b> top holder${dv.funded.length > 1 ? 's' : ''}` : ''}${dv.siblings.length ? ` · shares a funder with <b>${dv.siblings.length}</b>` : ''}${s.dev ? ` · <span style="color:#ea9f9f">${pc(s.dev)} with the dev</span>` : ''}${!dv.funded.length && !dv.siblings.length ? ' · <span class="f">no top holder came from its wallet</span>' : ''}</div></div>` : '';
+  const cl = d.clusters.slice(0, 8).map((c, i) => `<div class="bd-cl" style="--c:${CL[i % CL.length]}"><i></i><div><b>cluster ${i + 1} · ${c.members.length} wallets · ${pc(c.pct)}${c.dev ? ' <span class="tag dv">the dev</span>' : ''}</b><p>${c.funders.length ? `funded by ${c.funders.slice(0, 2).map(f => `<span class="tok" data-run="trace ${esc(f)}">${esc(short(f))}</span>`).join(', ')}` : 'tied by direct transfers'}${c.spread != null ? ` · ${c.spread < 1 ? 'in the same second' : 'within ' + dur(c.spread)}` : ''}${c.direct && c.funders.length ? ' · and they pay each other' : ''}</p><div class="bd-mem">${c.members.slice(0, 8).map(m => `<span class="tok" data-run="trace ${esc(m)}">${esc(short(m))}</span>`).join('')}</div></div></div>`).join('');
   const rows = d.holders.map((h, i) => `<div class="bd-h${h.cluster >= 0 ? ' cl' : ''}" ${h.pool ? '' : `data-run="trace ${esc(h.owner)}"`} style="--c:${h.cluster >= 0 ? CL[h.cluster % CL.length] : h.pool ? '#5a5751' : '#8a867e'}"><em>${i + 1}</em><span class="a">${h.pool ? 'pool / curve' : esc(short(h.owner))}${h.fresh ? ' <span class="tag">new</span>' : ''}</span><span class="mbar"><i style="width:${Math.max(3, Math.min(100, h.pct / Math.max(1, d.holders[0].pct) * 100))}%"></i></span><b>${pc(h.pct)}</b><span class="f">${h.pool ? 'program' : h.funder ? (h.funder.busy ? 'exchange/bot' : esc(h.funder.label || short(h.funder.addr))) : h.more ? 'old wallet' : '—'}</span></div>`).join('');
   $('#bd-rep').innerHTML = `<div class="score"><div class="gauge">${ringSvg(s.clustered, col, 132, 9)}<div class="gv"><div><b data-n>0</b><span>% clustered</span></div></div></div>
       <div><div class="grade" style="color:${col}" data-dec>${esc(d.grade)}</div><div class="gsub">${d.clusters.length ? `${d.clusters.length} cluster${d.clusters.length === 1 ? '' : 's'} of wallets that came from the same hand.` : 'no two of the top holders share a private funder.'}<br><span class="f">${esc(tok.sym)} · top ${s.holders} holders read · ${ago(d.at)} ago</span></div></div></div>
-    <div class="bd-kv"><div><span>top 10 (people)</span><b>${pc(s.top10)}</b></div><div><span>in clusters</span><b style="color:${col}">${pc(s.clustered)}</b></div><div><span>fresh wallets</span><b>${pc(s.fresh)}</b></div><div><span>pools / curve</span><b>${pc(s.pools)}</b></div></div>
+    <div class="bd-kv"><div><span>top 10 (people)</span><b>${pc(s.top10)}</b></div><div><span>in clusters</span><b style="color:${col}">${pc(s.clustered)}</b></div><div><span>fresh wallets</span><b>${pc(s.fresh)}</b></div><div><span>pools / curve</span><b>${pc(s.pools)}</b></div><div><span>dev + crowd</span><b${s.dev ? ' style="color:#ea9f9f"' : ''}>${s.dev == null ? '—' : pc(s.dev)}</b></div><div><span>funder unknown</span><b>${s.unknown} of ${s.people}</b></div></div>
+    ${devHtml}
     ${cl ? `<div class="rsec"><h5><span>clusters</span><span>one hand, many wallets</span></h5>${cl}</div>` : ''}
     <div class="rsec"><h5><span>top holders</span><span>funded by</span></h5><div class="bd-hs">${rows}</div></div>
     <div class="row" style="margin-top:14px"><button type="button" class="btn sm" data-run="token ${esc(tok.mint)}">coin report</button><button type="button" class="btn sm ghost" data-run="chart ${esc(tok.mint)}">chart</button><button type="button" class="btn sm ghost" data-copy="${esc(tok.mint)}">copy mint</button></div>
     <div class="tr-note">funders come from each wallet's own transfers: the oldest SOL in that we can see. wallets with long histories show as old. a shared funder is a strong hint, not proof.</div>`;
   countUp($('#bd-rep [data-n]'), s.clustered, 1100, v => v.toFixed(v >= 10 ? 0 : 1)); decode($('#bd-rep [data-dec]'), 520);
-  $('#bd-legend').innerHTML = `<span><i style="background:#eeebe4"></i>${esc(tok.sym)}</span><span><i style="background:${CL[0]}"></i>cluster</span><span><i style="background:#8a867e"></i>holder</span><span><i class="sq"></i>funder</span><span><i class="ring"></i>pool</span><span><i class="dot"></i>new wallet</span>`;
+  $('#bd-legend').innerHTML = `<span><i style="background:#eeebe4"></i>${esc(tok.sym)}</span><span><i style="background:${CL[0]}"></i>cluster</span><span><i style="background:#8a867e"></i>holder</span><span><i class="sq"></i>funder</span><span><i class="ring"></i>pool</span><span><i class="dot"></i>new wallet</span>${d.dev ? '<span style="color:#ea9f9f"><i class="ring" style="border-color:#ea9f9f"></i>dev</span>' : ''}`;
 }
 async function runBundle(q) {
   showTab('bundle'); bdWire();
@@ -155,6 +164,26 @@ def('bundle', 'market', 'bundle <token>', 'who funded the 20 biggest holders of 
 }, ['bubble', 'bundles', 'clusters', 'insiders']);
 
 // ================================================================ file: the case file
+const LAND = '0003e2b07fc0000003ffc7000fffb1fc7f800fc2ffffffffcfffffde3e301fffffffffff0fffff0c18003fffffffffff071ffe1e00001bfffffffc30000fffdf80033ffffffff8600003ffff8001fffffffffc000001ffff0001fffffffff8000001fffc0003ff3ffffff0000001fff0000707ffffffc0000001fff00003e0ffffff680000007fe00003f27fffff000000007f200007fffbffff800000001c00000fffffffff000000000ca0001fffff1ffc000000000780001fffde1c780000000000c0001ffff80c3880000000004e000ffff8080880000000001f8007fff8000000000000001fe0003ff0002700000000003ff0003fe0001700000000003ffc001fe000180e000000001ffe001fe0000407000000001ffc001fe0000010000000000ffc001fec0000760000000007fc001fc80000fe0000000007f8000fd80003ff0000000007e0000f800003ff8000000007c0000f000003ff8000000007c000060000018f800000000f80000000000003000000000e00000000000000020000000c00000000000000040000000c00000000000000000000000c0000000000000000000000000000000000000000';
+function mapDraw(cv, R) {
+  const W = 96, H = 36, bits = [...LAND].map(h => parseInt(h, 16).toString(2).padStart(4, '0')).join(''), r = cv.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+  cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const px = r.width / W, py = r.height / H, dot = Math.max(1, Math.min(px, py) * .3), lonOf = i => -180 + (i + .5) * 360 / W;
+  const band = R && R.clear ? R.off * 15 : null, inBand = (i, w) => { if (band == null) return 0; let d = Math.abs(lonOf(i) - band); d = Math.min(d, 360 - d); return d <= w ? 1 - d / (w + 8) : 0; };
+  const t0 = performance.now(), dur = RM.matches ? 0 : 1700, target = band == null ? null : (band + 180) / 360 * r.width;
+  const frame = now => {
+    const k = dur ? Math.min(1, (now - t0) / dur) : 1, e = 1 - Math.pow(1 - k, 3), sx = target == null ? -99 : e * target;
+    c.clearRect(0, 0, r.width, r.height);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (bits[y * W + x] !== '1') continue; const cx = (x + .5) * px, cy = (y + .5) * py, b = inBand(x, 30) * (k >= 1 ? 1 : 0), near = Math.abs(cx - sx) < px * 2.5 && k < 1;
+      c.fillStyle = b > 0 ? `rgba(217,160,102,${(.35 + .65 * b).toFixed(2)})` : near ? 'rgba(238,235,228,.85)' : 'rgba(238,235,228,.16)';
+      c.fillRect(cx - dot, cy - dot, dot * 2, dot * 2);
+    }
+    if (target != null) { c.strokeStyle = k < 1 ? 'rgba(238,235,228,.5)' : 'rgba(217,160,102,.55)'; c.lineWidth = 1; c.beginPath(); c.moveTo(Math.round(sx) + .5, 0); c.lineTo(Math.round(sx) + .5, r.height); c.stroke(); }
+    if (k < 1) requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+}
 const DAYS = ['sundays', 'mondays', 'tuesdays', 'wednesdays', 'thursdays', 'fridays', 'saturdays'];
 const hh = h => String(((h % 24) + 24) % 24).padStart(2, '0') + ':00';
 function rhythm(hours) {
@@ -222,12 +251,14 @@ async function openFile(addr) {
       <div class="cf-pic"><div class="cf-ph">${document.querySelector('.r-brand .mk').outerHTML}</div><span>no photo. yet.</span>${clockSvg(st.hours, R)}<span>when it moves · utc${R.clear ? ' · shaded: asleep' : ''}</span></div>
       <div class="cf-rows">${rows.map(([k, v], i) => `<div class="cf-r" style="--i:${i}"><span>${k}</span><b>${v}</b></div>`).join('')}</div>
     </div>
+    <div class="cf-map"><canvas></canvas><div class="cf-ml"><span>${R.clear ? `likely here · utc${R.off >= 0 ? '+' : '−'}${Math.abs(R.off)} ± 2` : R.tot >= 20 && R.flat ? 'no sleep to read · it never stops' : 'not enough moves to place it'}</span><span class="f">${R.clear ? 'a guess from the hours it goes quiet' : ''}</span></div></div>
     <div class="cf-foot"><span class="f">${st.transfers} transfers and ${st.counterparties} counterparties read. anyone can open a file like this on any wallet.</span><div class="row"><button type="button" class="btn sm" data-run="trace ${esc(T.addr)}">trace graph</button><button type="button" class="btn sm ghost" data-run="burner new">go darker</button><button type="button" class="btn sm ghost" data-copy="${esc(T.addr)}">copy address</button></div></div>
   </div>`;
   // the reveal: each line is redacted, then the bar pulls away and the text decodes; the stamp lands last
   const rs = [...box.querySelectorAll('.cf-r')], quick = RM.matches;
   rs.forEach(r => r.classList.add('rd'));
   for (let i = 0; i < rs.length; i++) { await sleep(quick ? 0 : i < 2 ? 160 : 95); rs[i].classList.remove('rd'); rs[i].classList.add('op'); decode(rs[i].querySelector('b'), 360); }
+  mapDraw(box.querySelector('.cf-map canvas'), R);
   await sleep(quick ? 0 : 260); const sp = box.querySelector('.cf-stamp'); sp.classList.add('hit'); setTimeout(() => box.querySelector('.cf').classList.add('shk'), quick ? 0 : 230);
   return T;
 }
@@ -252,7 +283,8 @@ function odds(pre, suf, ci) {
 }
 const VA = { ws: [], on: false };
 function stopVanity() { VA.ws.forEach(w => { try { w.postMessage({ stop: true }); w.terminate(); } catch {} }); VA.ws = []; VA.on = false; }
-def('vanity', 'privacy', 'vanity <letters> [..end] [-i]', 'grind a burner whose address starts (or ends, with ..) with your letters. made in this tab, never sent anywhere', async a => {
+def('vanity', 'privacy', 'vanity <letters> [..end] [-i]', 'grind a burner whose address starts (or ends, with ..) with your letters. made in this tab, never sent anywhere', async (a0, raw) => {
+  const a = String(raw || '').trim().split(/\s+/).slice(1); if (!a.length) a.push(...a0);
   if (a[0] === 'stop') { stopVanity(); line('<span class="d">vanity stopped.</span>'); return; }
   let ci = false, pre = '', suf = '';
   for (const x of a) { if (x === '-i' || x === '--any') ci = true; else if (x.startsWith('..')) suf = x.slice(2); else if (!pre) pre = x; }

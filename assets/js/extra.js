@@ -1,8 +1,8 @@
 // st3alth · the rest of the shell: a small filesystem to read, transaction and account inspection, the fee market,
 // a calculator, conversions, live top, themes, aliases, and a few things that only exist in the dark.
-import { $, api, esc, short, ago, usd, price, pct, amt, line, block, spinner, dots, sleep, clear, toast, isAddr, history, psHtml } from './core.js?v=4';
-import { CMDS, ALIAS, def } from './cmds.js?v=4';
-import * as SG from './signer.js?v=4';
+import { $, api, esc, short, ago, usd, price, pct, amt, line, block, spinner, dots, sleep, clear, toast, isAddr, history, psHtml } from './core.js?v=5';
+import { CMDS, ALIAS, def } from './cmds.js?v=5';
+import * as SG from './signer.js?v=5';
 const T0 = Date.now(); let RUNS = 0; export const counted = () => { RUNS++; };
 let RUN = () => {}; export const setExtraRunner = f => { RUN = f; };
 
@@ -43,7 +43,6 @@ your name: never asked                   nothing
 your ip: reads go through helius         your ip, to st3alth, like any site
 your browser: no cookies or trackers     nothing beyond this site
 your main wallet: burners trade for it   the burner and how it was funded
-your screen: masked mode blurs it        nothing, it is your screen
 your keys: never leave this tab          signatures, like every wallet
 your balances: in a privacy ring         who sent to whom; withdrawals
 
@@ -168,7 +167,7 @@ def('matrix', 'system', 'matrix', 'the void, falling', async () => {
 // a qr code for any address: fund a burner from a phone or an exchange without typing it
 def('qr', 'wallet', 'qr [address]', 'a scannable code for an address (your burner by default)', async a => {
   const addr = a[0] && isAddr(a[0]) ? a[0] : (SG.burnerPub() || SG.active()); if (!addr) throw new Error('Give an address, or make a burner first (burner new).');
-  const { default: qrcode } = await import('./qr.js?v=4'); const q = qrcode(0, 'M'); q.addData(addr); q.make();
+  const { default: qrcode } = await import('./qr.js?v=5'); const q = qrcode(0, 'M'); q.addData(addr); q.make();
   const n = q.getModuleCount(), px = Math.max(4, Math.floor(232 / (n + 8))), size = (n + 8) * px, cv = document.createElement('canvas'); cv.width = cv.height = size; cv.style.cssText = `width:${size}px;height:${size}px;border-radius:10px;display:block`;
   const g = cv.getContext('2d'); g.fillStyle = '#ecebe6'; g.fillRect(0, 0, size, size); g.fillStyle = '#040405';
   for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) g.fillRect((c + 4) * px, (r + 4) * px, px, px);
