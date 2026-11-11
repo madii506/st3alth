@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>st3alth · the privacy terminal for solana</title>
+<title>st3alth</title>
 <meta name="description" content="st3alth is a privacy terminal for Solana. Fresh wallets, private reads, and a scan that shows who can trace you. Powered by Helius.">
 <meta name="theme-color" content="#050505">
 <meta property="og:title" content="st3alth">
@@ -11,6 +11,7 @@
 <meta property="og:image" content="/assets/og.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/favicon-32.png" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="/assets/icon-180.png">
 <link rel="preload" href="/assets/fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/st3.css?v=1">
@@ -48,6 +49,7 @@
       <div class="win" id="w-radar" data-win="radar" hidden><div id="radarbox"></div></div>
       <div class="win" id="w-orders" data-win="orders" hidden><div class="ordbox" id="ordbox"></div></div>
       <div class="win" id="w-man" data-win="man" hidden><div class="man" id="manbox"></div></div>
+      <div class="win" id="w-check" data-win="check" hidden><div class="ordbox ckbox" id="checkbox"></div></div>
     </section>
     <aside id="side">
       <section class="pane" id="p-exp"><h4><span>your mask</span><em id="p-exp-k">exposure</em></h4><div class="expo" id="expo"></div></section>
@@ -68,7 +70,8 @@
       <button type="button" data-tab="radar"><b>4</b>radar</button>
       <button type="button" data-tab="orders"><b>5</b>orders</button>
       <button type="button" data-tab="man"><b>6</b>man</button>
-      <button type="button" data-tab="watch" class="tm-watch"><b>7</b>watch</button>
+      <button type="button" data-tab="check"><b>7</b>check</button>
+      <button type="button" data-tab="watch" class="tm-watch"><b>8</b>watch</button>
       <span class="tm-r"><span id="st-mode">MASKED</span><span id="signer">signer <b>none</b></span><span id="st-jup">router —</span><span id="st-eng">helius —</span></span>
     </nav>
   </footer>
