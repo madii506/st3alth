@@ -185,8 +185,9 @@ function mock(op, q) {
   if (op === 'ident') return { addr: a, identity: h[0] % 3 === 0 ? cex : null };
   const names = [['Jupiter Aggregator', 'defi'], ['pump.fun', 'defi'], ['Coinbase 4', 'cex'], ['Raydium', 'defi'], null, null, null, null, null, null];
   const counterparties = Array.from({ length: 26 }, (_, i) => { const g = H(a + i), nm = names[g[0] % names.length], nIn = g[1] % 7, nOut = g[2] % 9 + (i < 4 ? 3 : 0);
-    return { addr: fake(a + 'c' + i), nIn, nOut, solIn: +(g[3] / 40).toFixed(2), solOut: +(g[4] / 30).toFixed(2), first: now - g[5] * 9000, last: now - g[6] * 3000,
-      label: nm ? { name: nm[0], type: nm[1] === 'cex' ? 'exchange' : 'protocol', category: nm[1] === 'cex' ? 'Centralized Exchange' : 'DeFi', tags: [] } : null, kind: nm ? nm[1] : null, both: nIn > 0 && nOut > 0 }; })
+    const pool = i === 4 || i === 6, L = pool ? null : nm;   // two private wallets every mock trace shares, so link has something to find locally
+    return { addr: pool ? fake('shared-pool' + i) : fake(a + 'c' + i), nIn, nOut, solIn: +(g[3] / 40).toFixed(2), solOut: +(g[4] / 30).toFixed(2), first: now - g[5] * 9000, last: now - g[6] * 3000,
+      label: L ? { name: L[0], type: L[1] === 'cex' ? 'exchange' : 'protocol', category: L[1] === 'cex' ? 'Centralized Exchange' : 'DeFi', tags: [] } : null, kind: L ? L[1] : null, both: nIn > 0 && nOut > 0 }; })
     .sort((x, y) => (y.nIn + y.nOut) - (x.nIn + x.nOut));
   const hours = Array.from({ length: 24 }, (_, i) => Math.max(0, Math.round(14 * Math.exp(-Math.pow((i - 19) / 3.2, 2)) + (h[i % 32] % 3))));
   const paid = counterparties.find(c => c.nOut > 0 && !c.label) || counterparties[0], all = counterparties.concat([
