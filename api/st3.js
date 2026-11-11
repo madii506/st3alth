@@ -10,11 +10,12 @@ const KEY = process.env.HELIUS_API_KEY || '';
 const HOST = 'https://api.helius.xyz';
 const SOL = 'So11111111111111111111111111111111111111112';
 
-async function hel(path, { method = 'GET', body, ms = 9000 } = {}) {
+async function hel(path, { method = 'GET', body, ms = 9000 } = {}, tries = 3) {
   if (!KEY) throw L.err(503, 'Helius is not set up on this server yet.');
   const r = await fetch(HOST + path, { method, headers: { 'X-Api-Key': KEY, accept: 'application/json', ...(body ? { 'content-type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(ms) });
   const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch {}
   if (r.status === 404) return null;
+  if (r.status === 429 && tries > 1) { await new Promise(z => setTimeout(z, 650 * (4 - tries) + Math.random() * 450)); return hel(path, { method, body, ms }, tries - 1); }
   if (!r.ok) throw L.err(r.status === 403 ? 403 : r.status === 429 ? 429 : r.status === 400 ? 400 : 502, String((j && (j.error || j.message)) || 'helius ' + r.status).slice(0, 160));
   return j;
 }
@@ -103,6 +104,12 @@ async function isBusy(addr) {               // an exchange hot wallet, a bot or 
     if (list.length < 100) return false; const ts = list.map(x => x.timestamp).filter(Boolean); return ts.length > 50 && Math.max(...ts) - Math.min(...ts) < 6 * 3600;
   });
 }
+async function devOf(mint) {
+  const W = C.w3(), pda = W.PublicKey.findProgramAddressSync([Buffer.from('bonding-curve'), new W.PublicKey(mint).toBuffer()], new W.PublicKey('6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P'))[0].toBase58();
+  const r = await C.rawRpc('getAccountInfo', [pda, { encoding: 'base64', commitment: 'confirmed' }], 8000);
+  if (!r || !r.value) return null; const d = Buffer.from(r.value.data[0], 'base64'); if (d.length < 81) return null;
+  const k = C.b58enc(d.subarray(49, 81)); return k === '11111111111111111111111111111111' ? null : { addr: k, curve: pda };
+}
 async function bundle(mint) {
   return L.cached('bd:' + mint, 300000, async () => {
     const W = C.w3(), pk = new W.PublicKey(mint);
@@ -116,23 +123,34 @@ async function bundle(mint) {
       const h = byOwner.get(owner) || { owner, ui: 0, pct: 0, pool: !W.PublicKey.isOnCurve(new W.PublicKey(owner).toBytes()) }; h.ui += ui; h.pct = total ? h.ui / total * 100 : 0; byOwner.set(owner, h);
     });
     const holders = [...byOwner.values()].sort((a, b) => b.ui - a.ui), people = holders.filter(h => !h.pool);
-    const ff = await pool(people, 5, h => firstFunding(h.owner));
+    const [ff, dev] = await Promise.all([pool(people, 3, h => firstFunding(h.owner)), devOf(mint).catch(() => null)]);
+    if (dev) { const f = byOwner.has(dev.addr) ? null : await firstFunding(dev.addr).catch(() => null); dev.funder = f ? f.funder : null; }
     people.forEach((h, i) => { const f = ff[i]; h.n = f ? f.n : null; h.more = f ? f.more : null; h.first = f ? f.first : null; h.funder = f ? f.funder : null; h.cps = f ? f.cps : []; });
     // a funder behind two or more holders is the classic bundle: one wallet splits SOL into many, each buys
     const by = new Map(); for (const h of people) if (h.funder) { const k = h.funder.addr; if (!by.has(k)) by.set(k, []); by.get(k).push(h); }
-    const shared = [...by.keys()].filter(k => by.get(k).length > 1 || byOwner.has(k));
+    if (dev && byOwner.has(dev.addr)) { const i = people.findIndex(h => h.owner === dev.addr); if (i >= 0 && ff[i]) dev.funder = ff[i].funder; }
+    const shared = [...new Set([...by.keys()].filter(k => by.get(k).length > 1 || byOwner.has(k)).concat(dev && dev.funder ? [dev.funder.addr] : []))];
     const busy = Object.fromEntries((await pool(shared, 4, async k => [k, await isBusy(k)])).filter(Boolean));
     const ids = await identities(shared).catch(() => ({}));
     const noise = k => busy[k] || (ids[k] && (isCex(ids[k]) || kind(ids[k]) === 'defi'));
     // union-find: same private funder, a direct transfer between two holders, or one holder funding another
     const P = new Map(people.map(h => [h.owner, h.owner])), find = x => { while (P.get(x) !== x) { P.set(x, P.get(P.get(x))); x = P.get(x); } return x; }, join = (a, b) => { if (P.has(a) && P.has(b)) P.set(find(a), find(b)); };
     for (const [k, l] of by) if (!noise(k)) { for (let i = 1; i < l.length; i++) join(l[0].owner, l[i].owner); if (P.has(k)) join(k, l[0].owner); }
+    // the dev: whoever it funded, and whoever shares its funder, is the dev's crowd
+    let devOut = null;
+    if (dev) {
+      const funded = people.filter(h => h.funder && h.funder.addr === dev.addr), sib = dev.funder && !noise(dev.funder.addr) ? people.filter(h => h.owner !== dev.addr && h.funder && h.funder.addr === dev.funder.addr) : [];
+      const crew = [...funded, ...sib].map(h => h.owner); if (P.has(dev.addr)) crew.forEach(o => join(dev.addr, o)); else for (let i = 1; i < crew.length; i++) join(crew[0], crew[i]);
+      const me = byOwner.get(dev.addr);
+      devOut = { addr: dev.addr, holder: !!me, pct: me ? me.pct : 0, funded: funded.map(h => h.owner), siblings: sib.map(h => h.owner), funder: dev.funder ? dev.funder.addr : null, funderBusy: !!(dev.funder && busy[dev.funder.addr]) };
+    }
     const set = new Set(people.map(h => h.owner)), seenL = new Set(), links = [];
     for (const h of people) for (const c of h.cps) if (set.has(c) && c !== h.owner) { const key = [h.owner, c].sort().join(':'); if (!seenL.has(key)) { seenL.add(key); links.push([h.owner, c]); join(h.owner, c); } }
     const groups = new Map(); for (const h of people) { const r = find(h.owner); if (!groups.has(r)) groups.set(r, []); groups.get(r).push(h); }
     const clusters = [...groups.values()].filter(g => g.length > 1).map(g => {
       const fs = [...new Set(g.map(h => h.funder && h.funder.addr).filter(k => k && !noise(k) && by.get(k) && (by.get(k).length > 1 || set.has(k))))], ts = g.filter(h => h.funder && fs.includes(h.funder.addr)).map(h => h.funder.t).filter(Boolean);
-      return { members: g.map(h => h.owner), pct: g.reduce((a, h) => a + h.pct, 0), funders: fs, spread: ts.length > 1 ? Math.max(...ts) - Math.min(...ts) : null, direct: g.some(h => links.some(l => l.includes(h.owner))) };
+      const dv = !!devOut && g.some(h => h.owner === devOut.addr || devOut.funded.includes(h.owner) || devOut.siblings.includes(h.owner));
+      return { members: g.map(h => h.owner), pct: g.reduce((a, h) => a + h.pct, 0), funders: fs, spread: ts.length > 1 ? Math.max(...ts) - Math.min(...ts) : null, direct: g.some(h => links.some(l => l.includes(h.owner))), dev: dv };
     }).sort((a, b) => b.pct - a.pct);
     clusters.forEach((c, i) => c.members.forEach(m => { byOwner.get(m).cluster = i; }));
     const now = Date.now() / 1000, fresh = people.filter(h => h.first && !h.more && now - h.first < 3 * 86400);
@@ -141,8 +159,8 @@ async function bundle(mint) {
       mint, supply: total, at: Date.now(), plan: PLAN.wallet === false ? 'basic' : 'full',
       holders: holders.map(h => ({ owner: h.owner, pct: h.pct, pool: h.pool, n: h.n ?? null, more: h.more ?? null, first: h.first ?? null, cluster: h.cluster ?? -1, fresh: fresh.includes(h),
         funder: h.funder ? { addr: h.funder.addr, t: h.funder.t, amount: h.funder.amount, sure: h.funder.sure, busy: !!busy[h.funder.addr], label: ids[h.funder.addr] && ids[h.funder.addr].name || null } : null })),
-      links, clusters,
-      stats: { holders: holders.length, people: people.length, pools: sum(holders.filter(h => h.pool)), top10: sum(holders.slice(0, 10).filter(h => !h.pool)), clustered, fresh: sum(fresh), unknown: people.filter(h => !h.funder).length },
+      links, clusters, dev: devOut,
+      stats: { dev: devOut ? (devOut.pct + people.filter(h => devOut.funded.includes(h.owner) || devOut.siblings.includes(h.owner)).reduce((a, h) => a + h.pct, 0)) : null, holders: holders.length, people: people.length, pools: sum(holders.filter(h => h.pool)), top10: sum(holders.slice(0, 10).filter(h => !h.pool)), clustered, fresh: sum(fresh), unknown: people.filter(h => !h.funder).length },
     };
     out.grade = clustered >= 35 ? 'heavily bundled' : clustered >= 15 ? 'bundled' : clustered >= 5 ? 'some links' : 'clean';
     return out;
@@ -295,8 +313,10 @@ function mock(op, q) {
     const clusters = [0, 1, 2].map(k => { const mem = holders.filter((h, i) => plan[i][0] === k); return { members: mem.map(h => h.owner), pct: mem.reduce((a, h) => a + h.pct, 0), funders: [fund[k]], spread: 60 * (2 + k * 3), direct: k === 1 }; });
     clusters.forEach((c, i) => c.members.forEach(o => { holders.find(h => h.owner === o).cluster = i; }));
     const links = [[clusters[1].members[0], clusters[1].members[1]]], sum = l => l.reduce((a, h) => a + h.pct, 0), clustered = clusters.reduce((a, c) => a + c.pct, 0);
-    return { mint: m, supply: 1e9, at: Date.now(), plan: 'basic', holders, links, clusters,
-      stats: { holders: holders.length, people: holders.length - 1, pools: 21.4, top10: sum(holders.slice(0, 10).filter(h => !h.pool)), clustered, fresh: sum(holders.filter(h => h.fresh)), unknown: holders.filter(h => !h.pool && !h.funder).length },
+    const devA = fund[0]; clusters[0].dev = true; clusters[1].dev = false; clusters[2].dev = false;
+    const dev = { addr: devA, holder: false, pct: 0, funded: clusters[0].members, siblings: [], funder: fake(m + 'devf'), funderBusy: false };
+    return { mint: m, supply: 1e9, at: Date.now(), plan: 'basic', holders, links, clusters, dev,
+      stats: { dev: clusters[0].pct, holders: holders.length, people: holders.length - 1, pools: 21.4, top10: sum(holders.slice(0, 10).filter(h => !h.pool)), clustered, fresh: sum(holders.filter(h => h.fresh)), unknown: holders.filter(h => !h.pool && !h.funder).length },
       grade: clustered >= 35 ? 'heavily bundled' : clustered >= 15 ? 'bundled' : clustered >= 5 ? 'some links' : 'clean' };
   }
   const names = [['Jupiter Aggregator', 'defi'], ['pump.fun', 'defi'], ['Coinbase 4', 'cex'], ['Raydium', 'defi'], null, null, null, null, null, null];
