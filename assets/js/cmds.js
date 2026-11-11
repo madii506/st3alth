@@ -1,9 +1,9 @@
 // st3alth · every command. Each one is real: quotes, transactions and data come from the chain (through Helius), Jupiter
 // and pump.fun; the wallet (or a burner born in this tab) signs. Nothing here is a demo.
-import { $, $$, api, esc, short, ago, usd, price, pct, amt, img, line, block, spinner, dots, sleep, clear, copy, toast, isAddr, unb64, b64, history, forgetHist, seen, SEEN, pic, CA, EXPO } from './core.js?v=5';
-import * as SG from './signer.js?v=5';
-import { drawChart, spark } from './chart.js?v=5';
-import { startPulse, stopPulse, setPulseRunner } from './pulse.js?v=5';
+import { $, $$, api, esc, short, ago, usd, price, pct, amt, img, line, block, spinner, dots, sleep, clear, copy, toast, isAddr, unb64, b64, history, forgetHist, seen, SEEN, pic, CA, EXPO } from './core.js?v=6';
+import * as SG from './signer.js?v=6';
+import { drawChart, spark } from './chart.js?v=6';
+import { startPulse, stopPulse, setPulseRunner } from './pulse.js?v=6';
 
 export const CMDS = {}, ALIAS = {};
 export const def = (name, cat, usage, help, run, alias = []) => { CMDS[name] = { name, cat, usage, help, run }; alias.forEach(a => { ALIAS[a] = name; }); };

@@ -1,17 +1,17 @@
 // st3alth · the terminal: the intro hand-off, the boot, the prompt (history, ghost completion, token search), windows
 // (alt+0..7), the palette (ctrl k), masked mode, sound. One prompt drives every window.
-import { $, $$, esc, sleep, line, initOut, api, pushHist, history, clear, toast, SEEN, dots, follow, imgErr, psHtml, copy, CA } from './core.js?v=5';
-import { CMDS, ALIAS, setRunner, showTab, chartHover, chartRedraw } from './cmds.js?v=5';
-import { startPanes, setPaneRunner, engineLine } from './panes.js?v=5';
-import * as SG from './signer.js?v=5';
-import { counted, setExtraRunner, aliasOf, stopTop, cwd } from './extra.js?v=5';
-import { radar } from './dash.js?v=5';
-import { runTrace, setMasked } from './privacy.js?v=5';
-import './tools.js';
-import './check.js';
-import './fx.js';
-import './deep.js';
-import { manual } from './man.js?v=5';
+import { $, $$, esc, sleep, line, initOut, api, pushHist, history, clear, toast, SEEN, dots, follow, imgErr, psHtml, copy, CA } from './core.js?v=6';
+import { CMDS, ALIAS, setRunner, showTab, chartHover, chartRedraw } from './cmds.js?v=6';
+import { startPanes, setPaneRunner, engineLine } from './panes.js?v=6';
+import * as SG from './signer.js?v=6';
+import { counted, setExtraRunner, aliasOf, stopTop, cwd } from './extra.js?v=6';
+import { radar } from './dash.js?v=6';
+import { runTrace, setMasked } from './privacy.js?v=6';
+import './tools.js?v=6';
+import './check.js?v=6';
+import './fx.js?v=6';
+import './deep.js?v=6';
+import { manual } from './man.js?v=6';
 
 const dirOf = () => { const d = cwd(); return d === '/home/anon' ? '~' : d.replace('/home/anon', '~'); };
 const P = () => `<span class="p">${psHtml(dirOf())}</span>`;
@@ -167,7 +167,7 @@ $('#b-wal').onclick = () => { const s = SG.state(); runFrom(s.active ? 'wallet' 
 // ---------------------------------------------------------------- sound: the room tone from the intro keeps playing, quietly
 const SPK = on => `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 9h3l5-4v14l-5-4H4z"/>${on ? '<path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/>' : '<path d="M16 9l5 6M21 9l-5 6"/>'}</svg>`;
 let soundOn = (() => { try { return localStorage.getItem('st3:mute') !== '1'; } catch { return true; } })(), SND = null;
-async function sound() { if (!SND) { const m = await import('./sound.js?v=5'); SND = m.createSound(); } return SND; }
+async function sound() { if (!SND) { const m = await import('./sound.js?v=6'); SND = m.createSound(); } return SND; }
 async function setSound(on) {
   soundOn = on; try { localStorage.setItem('st3:mute', on ? '0' : '1'); } catch {}
   $('#b-snd').innerHTML = SPK(on); if (window.__st3Sound) window.__st3Sound.setMuted(!on); const s = await sound();
@@ -224,7 +224,7 @@ function foldBoot(els, hint, html) {
 // ---------------------------------------------------------------- the intro, then the terminal
 const params = new URLSearchParams(location.search);
 async function playIntro(force) {
-  try { const m = await import('../intro.js?v=5'); window.__st3Sound = m.SOUND; return await new Promise(res => m.runIntro(played => res(played !== false), { force })); }
+  try { const m = await import('../intro.js?v=6'); window.__st3Sound = m.SOUND; return await new Promise(res => m.runIntro(played => res(played !== false), { force })); }
   catch (e) { console.warn(e); return false; }
 }
 (async () => {

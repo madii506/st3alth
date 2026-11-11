@@ -1,7 +1,7 @@
 // st3alth · the live side: new coins, trending, stocks, the wallet pane, the top bar and the status line.
-import { $, $$, api, esc, short, ago, usd, price, pct, amt, img, seen, pic, imgSet } from './core.js?v=5';
-import * as SG from './signer.js?v=5';
-import { watchlist } from './cmds.js?v=5';
+import { $, $$, api, esc, short, ago, usd, price, pct, amt, img, seen, pic, imgSet } from './core.js?v=6';
+import * as SG from './signer.js?v=6';
+import { watchlist } from './cmds.js?v=6';
 let RUN = () => {}; export const setPaneRunner = f => { RUN = f; };
 const vis = () => !document.hidden;
 const prev = new Map();
