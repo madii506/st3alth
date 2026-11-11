@@ -670,14 +670,6 @@ body.dropping #app::before{content:"drop it. it stays in this tab.";position:fix
 .win.enter::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:rgba(238,235,228,.6);z-index:40;pointer-events:none;animation:scanY .5s var(--ease) both}
 @keyframes shut{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
 @keyframes scanY{from{top:0;opacity:1}85%{opacity:.75}to{top:calc(100% - 1px);opacity:0}}
-.watchers{position:absolute;inset:0;z-index:30;background:rgba(3,3,3,0);transition:background 3s ease;cursor:default;overflow:hidden}
-.watchers.on{background:rgba(3,3,3,.92)}
-.watchers.off{transition:background .3s ease;background:rgba(3,3,3,0)}
-.wt{position:absolute;transform:translate(-50%,-50%);color:#d6d1c6;opacity:0;transition:opacity 2.8s ease var(--d);z-index:0}
-.watchers.on .wt{opacity:var(--o)}
-.watchers.off .wt{transition:opacity .22s ease;opacity:0}
-.wt svg{display:block;width:100%;height:auto}
-.wt-b{position:absolute;left:50%;top:-34%;width:146%;height:460%;transform:translateX(-50%);background:#161412;border-radius:50% 50% 12% 12%/26% 26% 6% 6%;z-index:-1}
 .sonar{position:relative;height:196px;margin:-2px -4px 0;flex:1 1 auto}
 @media (min-width:720px){.dt-rate{grid-column:span 2;grid-row:span 2}.dt-rate .sonar{min-height:300px}}
 .sonar canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
