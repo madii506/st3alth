@@ -5,7 +5,7 @@
     "api/st3.js": { "maxDuration": 45, "memory": 1024 }
   },
   "rewrites": [
-    { "source": "/api/:op(net|trace|funded|ident|approvals|revoke|moves)", "destination": "/api/st3?op=:op" },
+    { "source": "/api/:op(net|trace|funded|ident|approvals|revoke|moves|bundle)", "destination": "/api/st3?op=:op" },
     { "source": "/api/:op(search|token|quote|swap|relay|sig|trending|recent|stocks|price|holdings|ohlcv|holders|ping|limit|dca|sendbuild|img|tx|account|fees|pulse|trades|fresh)", "destination": "/api/mkt?op=:op" }
   ],
   "headers": [
