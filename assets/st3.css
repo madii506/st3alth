@@ -808,3 +808,4 @@ body.dropping #app::before{content:"drop it. it stays in this tab.";position:fix
 @media (prefers-reduced-motion:reduce){.ln.glitch,#tin.fire::after{animation:none}}
 /* round 7: a quieter console header */
 #st-jup,#st-eng{display:none}
+.cf-wait{opacity:.5;font-weight:400}
