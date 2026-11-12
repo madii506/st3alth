@@ -102,14 +102,14 @@ async function prices(ids) {
 }
 async function holdings(owner) {
   if (!C.isAddr(owner)) throw L.err(400, 'That is not a Solana address.');
-  return L.cached('h:' + owner, 5000, async () => {
-    const j = await jup(`/ultra/v1/holdings/${owner}`);
+  return L.cached('h:' + owner, 60000, async () => {
+    const j = await jup(`/ultra/v1/holdings/${owner}`, {}, 9000);
     const toks = [];
     for (const [mint, accts] of Object.entries(j.tokens || {})) { let ui = 0, raw = 0n, dec = 0; for (const x of accts || []) { ui += num(x.uiAmount); raw += BigInt(x.amount || '0'); dec = num(x.decimals); } if (raw > 0n) toks.push({ mint, ui, raw: raw.toString(), dec }); }
     // names and prices for what they hold (top 25 by count of tokens is enough for a terminal)
     const top = toks.slice(0, 25); let px = {};
     try { px = await prices(top.map(t => t.mint).concat(SOL).join(',')); } catch {}
-    const info = {}; await Promise.all(top.slice(0, 12).map(async t => { try { const l = await search(t.mint); const x = l.find(y => y.mint === t.mint); if (x) info[t.mint] = x; } catch {} }));
+    const info = {}; await Promise.race([Promise.all(top.slice(0, 12).map(async t => { try { const l = await search(t.mint); const x = l.find(y => y.mint === t.mint); if (x) info[t.mint] = x; } catch {} })), new Promise(z => setTimeout(z, 2500))]);
     const sol = num(j.uiAmount, num(j.amount) / 1e9);
     return { sol, solUsd: px[SOL] ? px[SOL].usd : null, tokens: top.map(t => ({ ...t, sym: info[t.mint] ? info[t.mint].sym : '', name: info[t.mint] ? info[t.mint].name : '', usd: px[t.mint] && px[t.mint].usd != null ? px[t.mint].usd * t.ui : null })).sort((a, b) => num(b.usd) - num(a.usd)) };
   });

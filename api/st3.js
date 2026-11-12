@@ -123,14 +123,14 @@ async function bundle(mint) {
       const h = byOwner.get(owner) || { owner, ui: 0, pct: 0, pool: !W.PublicKey.isOnCurve(new W.PublicKey(owner).toBytes()) }; h.ui += ui; h.pct = total ? h.ui / total * 100 : 0; byOwner.set(owner, h);
     });
     const holders = [...byOwner.values()].sort((a, b) => b.ui - a.ui), people = holders.filter(h => !h.pool);
-    const [ff, dev] = await Promise.all([pool(people, 3, h => firstFunding(h.owner)), devOf(mint).catch(() => null)]);
+    const [ff, dev] = await Promise.all([pool(people, 5, h => firstFunding(h.owner)), devOf(mint).catch(() => null)]);
     if (dev) { const f = byOwner.has(dev.addr) ? null : await firstFunding(dev.addr).catch(() => null); dev.funder = f ? f.funder : null; }
     people.forEach((h, i) => { const f = ff[i]; h.n = f ? f.n : null; h.more = f ? f.more : null; h.first = f ? f.first : null; h.funder = f ? f.funder : null; h.cps = f ? f.cps : []; });
     // a funder behind two or more holders is the classic bundle: one wallet splits SOL into many, each buys
     const by = new Map(); for (const h of people) if (h.funder) { const k = h.funder.addr; if (!by.has(k)) by.set(k, []); by.get(k).push(h); }
     if (dev && byOwner.has(dev.addr)) { const i = people.findIndex(h => h.owner === dev.addr); if (i >= 0 && ff[i]) dev.funder = ff[i].funder; }
     const shared = [...new Set([...by.keys()].filter(k => by.get(k).length > 1 || byOwner.has(k)).concat(dev && dev.funder ? [dev.funder.addr] : []))];
-    const busy = Object.fromEntries((await pool(shared, 4, async k => [k, await isBusy(k)])).filter(Boolean));
+    const busy = Object.fromEntries((await pool(shared, 6, async k => [k, await isBusy(k)])).filter(Boolean));
     const ids = await identities(shared).catch(() => ({}));
     const noise = k => busy[k] || (ids[k] && (isCex(ids[k]) || kind(ids[k]) === 'defi'));
     // union-find: same private funder, a direct transfer between two holders, or one holder funding another
