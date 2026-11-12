@@ -2,10 +2,10 @@
 //   bundle  the 20 biggest holders of a coin and who funded each: wallets secretly run by one hand light up as clusters
 //   file    the case file a stranger can build on any wallet in a second: names, funders, circle, holdings, sleep, a stamp
 //   vanity  a burner whose address starts (or ends) with your letters, ground out in this tab and never sent anywhere
-import { $, esc, api, short, ago, isAddr, line, block, spinner, dots, toast, b58, usd, sleep } from './core.js?v=8';
-import { def, showTab, run } from './cmds.js?v=8';
-import * as SG from './signer.js?v=8';
-import { decode } from './fx.js?v=8';
+import { $, esc, api, short, ago, isAddr, line, block, spinner, dots, toast, b58, usd, sleep } from './core.js?v=9';
+import { def, showTab, run } from './cmds.js?v=9';
+import * as SG from './signer.js?v=9';
+import { decode } from './fx.js?v=9';
 
 const RM = matchMedia('(prefers-reduced-motion: reduce)');
 const CL = ['#d9a066', '#ea9f9f', '#e7c58c', '#9fc1d6', '#c3a9da', '#a7d7b6', '#d6b49f', '#b9c79a'];
@@ -214,16 +214,19 @@ async function openFile(addr) {
   if (!addr) { box.innerHTML = `<div class="cf-empty"><div class="mkbig">${document.querySelector('.r-brand .mk').outerHTML}</div><h3>open a file</h3><p>any wallet or .sol name. this is what a stranger can put together about it in a second, from public data alone.</p><form id="cf-form" class="cf-f" autocomplete="off"><input id="cf-in" placeholder="wallet address or name.sol" spellcheck="false"><button class="btn sm" type="submit">open</button></form></div>`; $('#cf-form').addEventListener('submit', e => { e.preventDefault(); const v = $('#cf-in').value.trim(); if (v) run(`file ${v}`); }); $('#cf-in').focus(); return null; }
   const t0 = performance.now();
   box.innerHTML = `<div class="cf-load"><span class="cf-spin"></span>pulling the file on <b>${esc(short(addr))}</b>…</div>`;
-  const [T, H] = await Promise.all([api('trace', { params: { addr } }), api('holdings', { params: { owner: addr } }).catch(() => null)]);
+  // the trace is the file; what they hold is a nice-to-have that can take long on busy wallets: wait 2.2 s at most, fill it in later
+  const hp = api('holdings', { params: { owner: addr } }).catch(() => null);
+  const [T, H0] = await Promise.all([api('trace', { params: { addr } }), Promise.race([hp, sleep(2200).then(() => undefined)])]);
+  const late = H0 === undefined, H = H0 || null;
   const took = ((performance.now() - t0) / 1000).toFixed(1);
   const st = T.stats, R = rhythm(st.hours), id = T.self || {}, names = (id.domains || []).slice(0, 3);
   const root = T.chain.find(c => c.kind === 'cex'), rootAt = T.chain.indexOf(root);
   const byName = l => { const m = new Map(); for (const c of l) { const k = c.label && c.label.name || short(c.addr); m.set(k, (m.get(k) || 0) + (c.nOut || 0)); } return [...m.entries()]; };
   const cexOut = byName(T.counterparties.filter(c => c.kind === 'cex' && c.nOut > 0)), circle = T.counterparties.filter(c => c.both && c.kind !== 'cex' && c.kind !== 'defi').slice(0, 3);
   const proto = byName(T.counterparties.filter(c => c.kind === 'defi')).slice(0, 4);
-  let holds = '—';
-  if (H) { const sol = H.sol || 0, solUsd = H.solUsd ? sol * H.solUsd : null, toks = (H.tokens || []).filter(x => x.usd > 1).sort((a, b) => b.usd - a.usd), total = (solUsd || 0) + toks.reduce((a, x) => a + x.usd, 0);
-    holds = `${total ? usd(total) + ' · ' : ''}${sol.toFixed(sol < 1 ? 3 : 2)} SOL${toks.slice(0, 3).map(x => ` · ${esc(x.sym)} ${usd(x.usd)}`).join('')}${toks.length > 3 ? ` · +${toks.length - 3} more` : ''}`; }
+  const holdsTxt = H => { if (!H) return '—'; const sol = H.sol || 0, solUsd = H.solUsd ? sol * H.solUsd : null, toks = (H.tokens || []).filter(x => x.usd > 1).sort((a, b) => b.usd - a.usd), total = (solUsd || 0) + toks.reduce((a, x) => a + x.usd, 0);
+    return `${total ? usd(total) + ' · ' : ''}${sol.toFixed(sol < 1 ? 3 : 2)} SOL${toks.slice(0, 3).map(x => ` · ${esc(x.sym)} ${usd(x.usd)}`).join('')}${toks.length > 3 ? ` · +${toks.length - 3} more` : ''}`; };
+  const holds = late ? '<span class="cf-wait">reading…</span>' : holdsTxt(H);
   const dayI = st.days && st.days.some(Boolean) ? st.days.indexOf(Math.max(...st.days)) : -1;
   const th = T.threats || [], poison = th.filter(x => x.kind === 'poison').length, dust = th.find(x => x.kind === 'dust');
   const caseNo = (addr.slice(2, 6) + '-' + addr.slice(-4)).toUpperCase(), stampCls = { ghost: 'g0', 'low profile': 'g1', traceable: 'g2', exposed: 'g3' }[T.grade] || 'g1';
@@ -255,6 +258,7 @@ async function openFile(addr) {
     <div class="cf-foot"><span class="f">${st.transfers} transfers and ${st.counterparties} counterparties read. anyone can open a file like this on any wallet.</span><div class="row"><button type="button" class="btn sm" data-run="trace ${esc(T.addr)}">trace graph</button><button type="button" class="btn sm ghost" data-run="burner new">go darker</button><button type="button" class="btn sm ghost" data-copy="${esc(T.addr)}">copy address</button></div></div>
   </div>`;
   // the reveal: each line is redacted, then the bar pulls away and the text decodes; the stamp lands last
+  if (late) hp.then(h => { const b = [...box.querySelectorAll('.cf-r')].find(r => r.firstElementChild && r.firstElementChild.textContent === 'holds'); if (b && b.isConnected) b.lastElementChild.innerHTML = holdsTxt(h); });
   const rs = [...box.querySelectorAll('.cf-r')], quick = RM.matches;
   rs.forEach(r => r.classList.add('rd'));
   for (let i = 0; i < rs.length; i++) { await sleep(quick ? 0 : i < 2 ? 160 : 95); rs[i].classList.remove('rd'); rs[i].classList.add('op'); decode(rs[i].querySelector('b'), 360); }
